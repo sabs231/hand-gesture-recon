@@ -1,13 +1,13 @@
 
 SRC_M		=	memo_test.cpp
 
-SRC_S		=	sergio_test.cpp
+SRC_S		=	sergio_test1.cpp
 
 CXX			=	g++
 
-CFLAGS		=	-W -Wall -Werror 
+CFLAGS		=	-W -Wall -Werror
 
-LDLIBS		=	-lopencv_core -lopencv_highgui -lopencv_imgproc
+LDLIBS		=	-lopencv_core -lopencv_highgui -lopencv_imgproc -lopencv_video
 
 LDFLAGS		=	$(LDLIBS)
 
