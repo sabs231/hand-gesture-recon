@@ -1,3 +1,4 @@
+#include <iostream>
 #include <opencv2/opencv.hpp>
 #include <time.h>
 #include <stdio.h>
@@ -45,6 +46,7 @@ static void  update_mhi( IplImage* img, IplImage* dst, int diff_threshold )
     IplImage* silh;
     CvSeq* seq;
     CvRect comp_rect;
+		CvRect roi;
     double count;
     double angle;
     CvPoint center;
@@ -84,7 +86,7 @@ static void  update_mhi( IplImage* img, IplImage* dst, int diff_threshold )
     silh = buf[idx2];
     cvAbsDiff( buf[idx1], buf[idx2], silh ); // get difference between frames
 
-    cvThreshold( silh, silh, diff_threshold, 1, CV_THRESH_BINARY ); // and threshold it
+    cvThreshold( silh, silh, diff_threshold, 255, CV_THRESH_BINARY); // and threshold it
     cvUpdateMotionHistory( silh, mhi, timestamp, MHI_DURATION ); // update MHI
 
     // convert MHI to blue 8u image
@@ -94,7 +96,7 @@ static void  update_mhi( IplImage* img, IplImage* dst, int diff_threshold )
     cvMerge( mask, 0, 0, 0, dst );
 
     // calculate motion gradient orientation and valid orientation mask
-    cvCalcMotionGradient( mhi, mask, orient, MAX_TIME_DELTA, MIN_TIME_DELTA, 3 );
+   cvCalcMotionGradient( mhi, mask, orient, MAX_TIME_DELTA, MIN_TIME_DELTA, 3 );
 
     if( !storage )
         storage = cvCreateMemStorage(0);
@@ -134,6 +136,9 @@ static void  update_mhi( IplImage* img, IplImage* dst, int diff_threshold )
 
         count = cvNorm( silh, 0, CV_L1, 0 ); // calculate number of points within silhouette ROI
 
+				roi = cvGetImageROI(mhi);
+				std::cout << "x: " << roi.x << " y: " << roi.y << " width: " << roi.width << " height: " << roi.height << std::endl; // print the roi
+
         cvResetImageROI( mhi );
         cvResetImageROI( orient );
         cvResetImageROI( mask );
@@ -149,7 +154,7 @@ static void  update_mhi( IplImage* img, IplImage* dst, int diff_threshold )
 
         cvCircle( dst, center, cvRound(magnitude*1.2), color, 3, CV_AA, 0 );
         cvLine( dst, center, cvPoint( cvRound( center.x + magnitude*cos(angle*CV_PI/180)),
-                cvRound( center.y - magnitude*sin(angle*CV_PI/180))), color, 3, CV_AA, 0 );
+                cvRound( center.y - magnitude*sin(angle*CV_PI/180))), color, 3, CV_AA, 0 );	
     }
 }
 
@@ -158,8 +163,6 @@ int main(int argc, char** argv)
 {
     IplImage* motion = 0;
     CvCapture* capture = 0;
-
-    help();
 
     if( argc == 1 || (argc == 2 && strlen(argv[1]) == 1 && isdigit(argv[1][0])))
         capture = cvCaptureFromCAM( argc == 2 ? argv[1][0] - '0' : 0 );
@@ -183,7 +186,7 @@ int main(int argc, char** argv)
                 motion->origin = image->origin;
             }
 
-            update_mhi( image, motion, 30 );
+            update_mhi( image, motion, 35 );
             cvShowImage( "Motion", motion );
 
             if( cvWaitKey(10) >= 0 )
