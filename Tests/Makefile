@@ -9,7 +9,8 @@ CXX			=	g++
 
 CFLAGS		=	-W -Wall -Werror
 
-LDLIBS		=	-lopencv_core -lopencv_highgui -lopencv_imgproc -lopencv_video
+#LDLIBS		=	-lopencv_core -lopencv_highgui -lopencv_imgproc -lopencv_video -lopencv_features2d
+LDLIBS		=	 -lopencv_core -lopencv_flann -lopencv_imgproc -lopencv_highgui -lopencv_ml -lopencv_video -lopencv_objdetect -lopencv_photo -lopencv_nonfree -lopencv_features2d -lopencv_calib3d -lopencv_legacy -lopencv_contrib -lopencv_stitching -lopencv_videostab -lopencv_gpu -lopencv_ts	
 
 LDFLAGS		=	$(LDLIBS)
 

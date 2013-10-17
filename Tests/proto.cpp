@@ -1,24 +1,17 @@
 #include <iostream>
+#include "opencv/cv.h"
 #include <opencv2/opencv.hpp>
 #include <time.h>
 #include <stdio.h>
 #include <ctype.h>
 
-static void help(void)
-{
-    printf(
-            "\nThis program demonstrated the use of motion templates -- basically using the gradients\n"
-            "of thresholded layers of decaying frame differencing. New movements are stamped on top with floating system\n"
-            "time code and motions too old are thresholded away. This is the 'motion history file'. The program reads from the camera of your choice or from\n"
-            "a file. Gradients of motion history are used to detect direction of motoin etc\n"
-            "Usage :\n"
-            "./motempl [camera number 0-n or file name, default is camera 0]\n"
-            );
-}
 // various tracking parameters (in seconds)
 const double MHI_DURATION = 1;
 const double MAX_TIME_DELTA = 0.5;
 const double MIN_TIME_DELTA = 0.05;
+const double MOTION_HISTORY_SENSITIVITY = 45;//35
+const double MOTION_VECTOR_SENSITIVITY = 150;//100
+const double SURF_THRESHOLD = 600;//500
 // number of cyclic frame buffer used for motion detection
 // (should, probably, depend on FPS)
 const int N = 4;
@@ -90,10 +83,32 @@ static void  update_mhi( IplImage* img, IplImage* dst, int diff_threshold )
     cvUpdateMotionHistory( silh, mhi, timestamp, MHI_DURATION ); // update MHI
 
     // convert MHI to blue 8u image
-    cvCvtScale( mhi, mask, 255./MHI_DURATION,
-                (MHI_DURATION - timestamp)*255./MHI_DURATION );
+    cvCvtScale( mhi, mask, 255./MHI_DURATION, (MHI_DURATION - timestamp)*255./MHI_DURATION );
     cvZero( dst );
     cvMerge( mask, 0, 0, 0, dst );
+
+
+	//--SURF CORNERS--
+        color = CV_RGB(0,255,0);
+        CvMemStorage* storage2 = cvCreateMemStorage(0);
+        CvSURFParams params = cvSURFParams(SURF_THRESHOLD, 1);
+        CvSeq *imageKeypoints = 0, *imageDescriptors = 0;
+        cvExtractSURF( dst, 0, &imageKeypoints, &imageDescriptors, storage2, params );
+        printf("Image Descriptors: %d\n", imageDescriptors->total);
+        for( int j = 0; j < imageKeypoints->total; j++ ){
+            CvSURFPoint* r = (CvSURFPoint*)cvGetSeqElem( imageKeypoints, j );
+            printf("j: %d \t", j);               
+            printf("total: %d \t", imageKeypoints->total);               
+            printf("valor hessiano: %f \t", r->hessian);
+            center.x = cvRound(r->pt.x);
+            center.y = cvRound(r->pt.y);
+            printf("x: %d \t", center.x);
+            printf("y: %d \n", center.y);
+		// Agrego el Punto en donde es la region que nos interesa
+            	cvCircle( dst, center, cvRound(r->hessian*0.02), color, 3, CV_AA, 0 );
+        }
+	//--SURF CORNERS
+
 
     // calculate motion gradient orientation and valid orientation mask
    cvCalcMotionGradient( mhi, mask, orient, MAX_TIME_DELTA, MIN_TIME_DELTA, 3 );
@@ -118,7 +133,7 @@ static void  update_mhi( IplImage* img, IplImage* dst, int diff_threshold )
         }
         else { // i-th motion component
             comp_rect = ((CvConnectedComp*)cvGetSeqElem( seq, i ))->rect;
-            if( comp_rect.width + comp_rect.height < 100 ) // reject very small components
+            if( comp_rect.width + comp_rect.height < MOTION_VECTOR_SENSITIVITY ) // reject very small components
                 continue;
             color = CV_RGB(255,0,0);
             magnitude = 30;
@@ -136,8 +151,8 @@ static void  update_mhi( IplImage* img, IplImage* dst, int diff_threshold )
 
         count = cvNorm( silh, 0, CV_L1, 0 ); // calculate number of points within silhouette ROI
 
-				roi = cvGetImageROI(mhi);
-				std::cout << "x: " << roi.x << " y: " << roi.y << " width: " << roi.width << " height: " << roi.height << std::endl; // print the roi
+		roi = cvGetImageROI(mhi);
+		//std::cout << "x: " << roi.x << " y: " << roi.y << " width: " << roi.width << " height: " << roi.height << std::endl; // print the roi
 
         cvResetImageROI( mhi );
         cvResetImageROI( orient );
@@ -154,8 +169,11 @@ static void  update_mhi( IplImage* img, IplImage* dst, int diff_threshold )
 
         cvCircle( dst, center, cvRound(magnitude*1.2), color, 3, CV_AA, 0 );
         cvLine( dst, center, cvPoint( cvRound( center.x + magnitude*cos(angle*CV_PI/180)),
-                cvRound( center.y - magnitude*sin(angle*CV_PI/180))), color, 3, CV_AA, 0 );	
+        cvRound( center.y - magnitude*sin(angle*CV_PI/180))), color, 3, CV_AA, 0 );	
     }
+
+	
+
 }
 
 
@@ -186,7 +204,7 @@ int main(int argc, char** argv)
                 motion->origin = image->origin;
             }
 
-            update_mhi( image, motion, 35 );
+            update_mhi( image, motion, MOTION_HISTORY_SENSITIVITY );
             cvShowImage( "Motion", motion );
 
             if( cvWaitKey(10) >= 0 )
