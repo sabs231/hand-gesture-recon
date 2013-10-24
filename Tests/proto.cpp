@@ -39,7 +39,7 @@ static void  update_mhi( IplImage* img, IplImage* dst, int diff_threshold )
     IplImage* silh;
     CvSeq* seq;
     CvRect comp_rect;
-		CvRect roi;
+    CvRect roi;
     double count;
     double angle;
     CvPoint center;
@@ -82,10 +82,10 @@ static void  update_mhi( IplImage* img, IplImage* dst, int diff_threshold )
     cvThreshold( silh, silh, diff_threshold, 255, CV_THRESH_BINARY); // and threshold it
     cvUpdateMotionHistory( silh, mhi, timestamp, MHI_DURATION ); // update MHI
 
-    // convert MHI to blue 8u image
-    cvCvtScale( mhi, mask, 255./MHI_DURATION, (MHI_DURATION - timestamp)*255./MHI_DURATION );
-    cvZero( dst );
-    cvMerge( mask, 0, 0, 0, dst );
+	// convert MHI to blue 8u image
+	cvCvtScale( mhi, mask, 255./MHI_DURATION, (MHI_DURATION - timestamp)*255./MHI_DURATION );
+	cvZero( dst );
+	cvMerge( mask, 0, 0, 0, dst );
 
 
 	//--SURF CORNERS--
@@ -110,8 +110,8 @@ static void  update_mhi( IplImage* img, IplImage* dst, int diff_threshold )
 	//--SURF CORNERS
 
 
-    // calculate motion gradient orientation and valid orientation mask
-   cvCalcMotionGradient( mhi, mask, orient, MAX_TIME_DELTA, MIN_TIME_DELTA, 3 );
+	// calculate motion gradient orientation and valid orientation mask
+	cvCalcMotionGradient( mhi, mask, orient, MAX_TIME_DELTA, MIN_TIME_DELTA, 3 );
 
     if( !storage )
         storage = cvCreateMemStorage(0);
