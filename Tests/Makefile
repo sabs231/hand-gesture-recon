@@ -48,10 +48,10 @@ $(NAME_PROTO):		$(OBJS_PROTO)
 $(NAME_RELEVANCE):	$(OBJS_RELEVANCE)
 				$(CXX) $(CFLAGS) $(OBJS_RELEVANCE) $(LDFLAGS) -o $(NAME_RELEVANCE)
 clean:			
-				$(RM) $(OBJS_M) $(OBJS_S) $(OBJS_PROTO)
+				$(RM) $(OBJS_M) $(OBJS_S) $(OBJS_PROTO) $(OBJS_RELEVANCE)
 
 fclean:			clean
-				$(RM) $(NAME_M) $(NAME_S) $(NAME_PROTO)
+				$(RM) $(NAME_M) $(NAME_S) $(NAME_PROTO) $(NAME_RELEVANCE)
 
 re:				clean all
 
