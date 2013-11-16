@@ -7,7 +7,7 @@ SRC_PROTO	=	proto.cpp
 
 SRC_RELEVANCE	=	relevanceVectors.cpp
 
-CXX			=	g++
+CXX		=	g++
 
 CFLAGS		=	-W -Wall -Werror
 
@@ -32,7 +32,7 @@ OBJS_PROTO	=	$(SRC_PROTO:.cpp=.o)
 
 OBJS_RELEVANCE	=	$(SRC_RELEVANCE:.cpp=.o)
 
-RM			=	rm -f
+RM		=	rm -f
 
 all:			$(NAME_M) $(NAME_S) $(NAME_PROTO) $(NAME_RELEVANCE)
 
@@ -53,6 +53,6 @@ clean:
 fclean:			clean
 				$(RM) $(NAME_M) $(NAME_S) $(NAME_PROTO) $(NAME_RELEVANCE)
 
-re:				clean all
+re:			clean all
 
 .PHONY:			all clean fclean re
