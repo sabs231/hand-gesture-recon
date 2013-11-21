@@ -22,3 +22,21 @@ ParameterException::ParameterException(const std::string & msg) throw()
 ParameterException::~ParameterException(void) throw()
 {
 }
+
+InputNotFoundException::InputNotFoundException(const std::string & msg) throw()
+	: Exception(msg)
+{
+}
+
+InputNotFoundException::~InputNotFoundException(void) throw()
+{
+}
+
+FileReadException::FileReadException(const std::string & msg) throw()
+	: Exception(msg)
+{
+}
+
+virtual FileReadException::~FileReadException(void) throw()
+{
+}

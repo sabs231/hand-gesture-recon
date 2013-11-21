@@ -8,13 +8,13 @@ SOBJ			=		$(SRC:.cpp=.o)
 
 NAME			=		bin/grecon
 
-CXX				=		g++
+CXX				=		clang++
 
 CXXFLAGS		+=		-I./include
 
 CXXFLAGS		+=		-W -Wall -Wextra -Werror
 
-OPENCVLIB		=		-lopencv_core -lopencv_flann -lopencv_imgproc -lopencv_highgui -lopencv_ml -lopencv_video -lopencv_objdetect -lopencv_photo -lopencv_nonfree -lopencv_features2d -lopencv_calib3d -lopencv_legacy -lopencv_contrib -lopencv_stitching -lopencv_videostab -lopencv_gpu -lopencv_ts
+OPENCVLIB		=		-lopencv_core -lopencv_highgui -lopencv_imgproc -lopencv_video -lopencv_features2d
 
 RM				=		rm -f
 
@@ -26,7 +26,7 @@ ECHO			=		echo
 all:			$(NAME)
 
 $(NAME):		$(SEOBJ) $(SOBJ)
-				$(CXX) $(SEOBJ) $(SOBJ) -o $(NAME) $(OPENCVLIB)
+				$(CXX) $(SEOBJ) $(SOBJ) $(OPENCVLIB) -o $(NAME)
 				@$(ECHO) '---> grecon compiled'
 
 clean:

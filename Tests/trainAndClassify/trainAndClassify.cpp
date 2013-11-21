@@ -294,7 +294,7 @@ static int read_num_class_data( const char* filename, int var_count, CvMat** dat
 
     el_ptr = new float[var_count+1];
     storage = cvCreateMemStorage();
-    seq = cvCreateSeq( 0, sizeof(*seq), (var_count+1)*sizeof(float), storage );
+jiji    seq = cvCreateSeq( 0, sizeof(*seq), (var_count+1)*sizeof(float), storage );
 
     for(;;)
     {

@@ -1,19 +1,20 @@
-#include 	<opencv2/highgui/highgui.hpp>
-#include 	<iostream>
-#include 	"exception.hh"
+#include 				<opencv2/highgui/highgui.hpp>
+#include 				<iostream>
+#include 				"exception.hh"
 
-int 			main(int argc, char **argv)
+using namespace cv;
+
+int 						main(int argc, char **argv)
 {
-	(void)argv;
-
 	try
 	{
-		if (argc != 2)
+		if (argc != 3)
 		{
-			throw (new ParameterException("./grecon <video file or device number>"));
+			throw (new ParameterException("./grecon -v [video file name] | -d [device number]"));
 			return (1);
 		}
-		std::cout << "good parameters" << std::endl;
+		std::string arg = argv[1];
+		VideoCapture capture(arg);
 	}
 	catch (std::exception *e)
 	{

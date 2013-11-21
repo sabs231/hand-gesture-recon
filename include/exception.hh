@@ -21,4 +21,18 @@ class ParameterException : public Exception
 		virtual ~ParameterException(void) throw();
 };
 
+class InputNotFoundException : public Exception
+{
+	public:
+		InputNotFoundException(const std::string & msg) throw();
+		virtual ~InputNotFoundException(void) throw();
+};
+
+class FileReadException : public Exception
+{
+	public:
+		FileReadException(const std::string & msg) throw();
+		virtual ~FileReadException(void) throw();
+}
+
 #endif
