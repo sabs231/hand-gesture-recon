@@ -74,6 +74,30 @@ NBayesClassifierOPCV::~NBayesClassifierOPCV()
 		delete this->nBayesClass;
 }
 
+void 		NBayesClassifierOPCV::printMat(CvMat *m)
+{
+	for (int i = 0; i < m->rows; i++)
+	{
+		std::cout << std::endl;
+		switch (CV_MAT_DEPTH(m->type))
+		{
+			case CV_32F:
+			case CV_64F:
+				for (int j = 0; j < m->cols; j++)
+					fprintf(stdout, "%8.3f", (float)cvGetReal2D(m, i, j))
+				break;
+			case CV_8U:
+			case CV_16U:
+				for (int j = 0; j < m->cols; j++)
+					fprintf(stdout, "6d", (int)cvGetReal2D(m, i, j));
+				break;
+			default:
+				break;
+		}
+	}
+	std::cout << std::endl;
+}
+
 bool 		NBayesClassifierOPCV::train()
 {
 	int 	nSamplesAll = 0;
@@ -92,6 +116,16 @@ bool 		NBayesClassifierOPCV::train()
 	return (true);
 }
 
-float 	NBayesClassifierOPCV::predict()
+float 		NBayesClassifierOPCV::predict(RelevanceVector<float> *rV)
 {
+	float 	prediction;
+	CvMat 	sample = cvMat(1, 51, CV_32FC1, rv->getRelevanceVector);
+
+	prediction = 0.0000;
+	if (this->nBayesClass)
+	{
+		prediction = (float) this->nBayesClass->predict(&sample);
+		this->printMat(&sample);
+	}
+	std::cout << "Prediction: " << prediction << std::endl;
 }

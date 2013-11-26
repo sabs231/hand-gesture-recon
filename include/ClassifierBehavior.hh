@@ -1,11 +1,13 @@
 #ifndef CLASSIFIER_BEHAVIOR_HH_
 # define CLASSIFIER_BEHAVIOR_HH_
 
-class 	ClassifierBehavior
+#include 	"relevanceVector.hpp"
+
+class 		ClassifierBehavior
 {
 	public:
 		virtual bool 		train() = 0;
-		virtual float 						predict() = 0;
+		virtual float 	predict(RelevanceVector *) = 0;
 };
 
 #endif

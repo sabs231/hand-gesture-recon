@@ -2,6 +2,7 @@
 # define NBAYESCLASSIFIEROPCV_HH_
 
 # include 	<opencv2/opencv.hpp>
+# include 	"ClassifierBehavior.h"
 
 class 			NBayesClassifierOPCV : public ClassifierBehavior
 {
@@ -15,8 +16,9 @@ class 			NBayesClassifierOPCV : public ClassifierBehavior
 	public:
 		NBayesClassifierOPCV(const char *);
 		~NBayesClassifierOPCV();
+		void 						printMat(CvMat *);
 		virtual bool 		train();
-		virtual float 	predict();
+		virtual float 	predict(RelevanceVector<float> *);
 };
 
 #endif
