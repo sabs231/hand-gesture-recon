@@ -3,16 +3,18 @@
 
 # include 	<map>
 # include 	<string>
-# include 	"ClassifierBehavior.hh"
+# include 	"classifierBehavior.hh"
 
 class 			Classifier
 {
 	protected:
 		std::map<const std::string &, ClassifierBehavior *> 	*_classifiers;
 	public:
+		Classifier();
+		~Classifier();
 		void 	setClassifier(const std::string &, ClassifierBehavior *);
 		void 	performTrain(const std::string &);
-		void 	performPredict(const std::strin &);
+		void 	performPredict(const std::string &);
 };
 
 #endif

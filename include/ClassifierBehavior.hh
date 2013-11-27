@@ -6,6 +6,7 @@
 class 		ClassifierBehavior
 {
 	public:
+		virtual 				~ClassifierBehavior(){}
 		virtual bool 		train() = 0;
 		virtual float 	predict(RelevanceVector *) = 0;
 };

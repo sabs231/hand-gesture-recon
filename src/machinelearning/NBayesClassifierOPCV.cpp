@@ -1,7 +1,7 @@
 #include 				<cstdio>
 #include 				<cstring>
 #include 				<iostream>
-#include 				"NBayesClassifierOPCV.hh"
+#include 				"nBayesClassifierOPCV.hh"
 
 bool 						NBayesClassifierOPCV::readNumClassData(const char *fileName, int varCount)
 {
