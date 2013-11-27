@@ -288,8 +288,9 @@ int main(int argc, char** argv){
 	int			wSROI = 0;
 	int			hSROI = 0;
 	std::ofstream 	relevanceVectorFile;
+	std::vector<double> relevanceTmp;
 	CvSize		ImageSize;
-
+	
 	// What to DO
 	short train = 0;
 	if( argc == 2 && strlen(argv[1]) == 5){
@@ -299,18 +300,19 @@ int main(int argc, char** argv){
 	try{
 	if(train){
 		std::vector< std::vector<double> > relevanceVectors;
-		std::vector<double> relevanceTmp;
 		std::ostringstream fileNameStream;
 		// Mapa de Videos
 		std::multimap<char,std::string> videoFileClass;
-		//fillVideoMap(&videoFileClass);
-		videoFileClass.insert(std::pair<char,std::string>('H',"querer01"));
-		videoFileClass.insert(std::pair<char,std::string>('H',"querer02"));
+		fillVideoMap(&videoFileClass);
+		/*
+		videoFileClass.insert(std::pair<char,std::string>('Q',"querer01"));
+		videoFileClass.insert(std::pair<char,std::string>('Q',"querer02"));
 		videoFileClass.insert(std::pair<char,std::string>('H',"hola00"));
 		videoFileClass.insert(std::pair<char,std::string>('H',"hola20"));
 		videoFileClass.insert(std::pair<char,std::string>('H',"hola21"));
-		videoFileClass.insert(std::pair<char,std::string>('H',"matrimonio20"));
-		videoFileClass.insert(std::pair<char,std::string>('H',"matrimonio21"));
+		videoFileClass.insert(std::pair<char,std::string>('M',"matrimonio20"));
+		videoFileClass.insert(std::pair<char,std::string>('M',"matrimonio21"));
+		*/
 		// Iterar por cada uno de los videos y obtener su vector de Relevancia
 		cvNamedWindow( "Motion", 1 );
 		relevanceVectorFile.open ("relevanceVectors.txt");
@@ -347,7 +349,6 @@ int main(int argc, char** argv){
 					cvShowImage( "Motion", motion );
 					if(cvWaitKey(10) >= 0) break;
 				}
-				std::cout << "SALIO" << std::endl;
 				fileNameStream << "../_generatedImages/" << (*it).second  << ".jpg"; // write to string stream
 				std::string file_name = fileNameStream.str(); // get string out of stream
 				fileNameStream.str("");
@@ -410,7 +411,11 @@ int main(int argc, char** argv){
 					if(frameCount > COMPUTE_FRAME_THRESHOLD){
 						frameCount = 0;
 						update_mhi( captionOriginalImage, motion, &mhi, &buf, &silh, &mask, MOTION_HISTORY_SENSITIVITY, &lastHistoryFrame);
-						computeVectors(&mhi, motion, ImageSize.width/5, ImageSize.height/5, (ImageSize.width-((ImageSize.width/5)*2))/4, (ImageSize.height-((ImageSize.height/5)*2))/4);
+						wROI = ImageSize.width/5;
+						hROI = ImageSize.height/5;
+						wSROI= (ImageSize.width-((ImageSize.width/5)*2))/4;
+						hSROI= (ImageSize.height-((ImageSize.height/5)*2))/4;
+						relevanceTmp = computeVectors(&mhi, motion, wROI, hROI, wSROI, hSROI);
 					}
 					cvShowImage( "Motion", motion );
 					if(cvWaitKey(10) >= 0) break;
