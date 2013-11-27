@@ -7,11 +7,12 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <map>
+#include <exception>
 #define DEBUG 0
 const short COMPUTE_FRAME_THRESHOLD = 0; // How many frames should pass to compute a vector
-const double MOTION_HISTORY_SENSITIVITY = 50; // ORIG 45
-const double MHI_DURATION = 1;
-const double MGO_DURATION = 1;
+const double MOTION_HISTORY_SENSITIVITY = 50;
+const double MHI_DURATION = 7; // 1
+const double MGO_DURATION = 7;
 
 void fillVideoMap(std::multimap<char,std::string> *videoFileClass){
 	std::ostringstream fileNameStream;
@@ -99,7 +100,7 @@ static void  update_mhi( IplImage* img, IplImage* dst, IplImage** mhi, IplImage*
 }
 
 // parameters:
-std::vector<double> computeVectors(IplImage** mhi, IplImage* dst, short wROI, short hROI){
+std::vector<double> computeVectors(IplImage** mhi, IplImage* dst, short wROI, short hROI, short wSROI, short hSROI){
 	double timestamp = (double)clock()/CLOCKS_PER_SEC; // Get current time in seconds
 	CvSize size = cvSize(dst->width, dst->height); // Get current frame size; 640x480
 	std::vector<double> relevanceVector;
@@ -232,12 +233,12 @@ std::vector<double> computeVectors(IplImage** mhi, IplImage* dst, short wROI, sh
 	
 	color = CV_RGB(255,0,0);
 	magnitude = 20;
-	for (int r = hROI; r < size.height - hROI; r += 72){
-		for (int c = wROI; c < size.width - wROI; c += 96){
+	for (int r = hROI; r < size.height - hROI; r += hSROI){
+		for (int c = wROI; c < size.width - wROI; c += wSROI){
 			comp_rect.x = c;
 			comp_rect.y = r;
-			comp_rect.width = 96;
-			comp_rect.height = 72;
+			comp_rect.width = wSROI;
+			comp_rect.height = hSROI;
 
 			cvSetImageROI( (*mhi), comp_rect );
 			cvSetImageROI( orient, comp_rect );
@@ -281,8 +282,13 @@ int main(int argc, char** argv){
 	CvCapture*	capture = 0;
 	short 		frameCount = 0;
 	int 		lastHistoryFrame = 0;
-	double 		fps	= 0.0;
+	double 		fps	= 0;
+	int			wROI = 0;
+	int			hROI = 0;
+	int			wSROI = 0;
+	int			hSROI = 0;
 	std::ofstream 	relevanceVectorFile;
+	CvSize		ImageSize;
 
 	// What to DO
 	short train = 0;
@@ -290,15 +296,21 @@ int main(int argc, char** argv){
 		train = 1;
 	}
 	
+	try{
 	if(train){
 		std::vector< std::vector<double> > relevanceVectors;
 		std::vector<double> relevanceTmp;
 		std::ostringstream fileNameStream;
 		// Mapa de Videos
 		std::multimap<char,std::string> videoFileClass;
-		fillVideoMap(&videoFileClass);
-		//videoFileClass.insert(std::pair<char,std::string>('H',"hola00"));
-		//videoFileClass.insert(std::pair<char,std::string>('H',"hola01"));
+		//fillVideoMap(&videoFileClass);
+		videoFileClass.insert(std::pair<char,std::string>('H',"querer01"));
+		videoFileClass.insert(std::pair<char,std::string>('H',"querer02"));
+		videoFileClass.insert(std::pair<char,std::string>('H',"hola00"));
+		videoFileClass.insert(std::pair<char,std::string>('H',"hola20"));
+		videoFileClass.insert(std::pair<char,std::string>('H',"hola21"));
+		videoFileClass.insert(std::pair<char,std::string>('H',"matrimonio20"));
+		videoFileClass.insert(std::pair<char,std::string>('H',"matrimonio21"));
 		// Iterar por cada uno de los videos y obtener su vector de Relevancia
 		cvNamedWindow( "Motion", 1 );
 		relevanceVectorFile.open ("relevanceVectors.txt");
@@ -313,7 +325,10 @@ int main(int argc, char** argv){
 				std::cout << "FPS: " <<  fps << std::endl;
 				while(true){
 					captionOriginalImage = cvQueryFrame( capture );
-					if(!captionOriginalImage) break;
+					if(!captionOriginalImage){
+						break;
+					}
+					ImageSize = cvSize(captionOriginalImage->width, captionOriginalImage->height);
 					if( !motion ){
 						motion = cvCreateImage( cvSize(captionOriginalImage->width,captionOriginalImage->height), 8, 3);
 						cvZero( motion );
@@ -323,11 +338,16 @@ int main(int argc, char** argv){
 					if(frameCount > COMPUTE_FRAME_THRESHOLD){
 						frameCount = 0;
 						update_mhi( captionOriginalImage, motion, &mhi, &buf, &silh, &mask, MOTION_HISTORY_SENSITIVITY, &lastHistoryFrame);
-		    			relevanceVectors.push_back(computeVectors(&mhi, motion, 128, 96));
+						wROI = ImageSize.width/5;
+						hROI = ImageSize.height/5;
+						wSROI= (ImageSize.width-((ImageSize.width/5)*2))/4;
+						hSROI= (ImageSize.height-((ImageSize.height/5)*2))/4;
+						relevanceVectors.push_back(computeVectors(&mhi, motion, wROI, hROI, wSROI, hSROI));
 					}
 					cvShowImage( "Motion", motion );
 					if(cvWaitKey(10) >= 0) break;
 				}
+				std::cout << "SALIO" << std::endl;
 				fileNameStream << "../_generatedImages/" << (*it).second  << ".jpg"; // write to string stream
 				std::string file_name = fileNameStream.str(); // get string out of stream
 				fileNameStream.str("");
@@ -340,6 +360,7 @@ int main(int argc, char** argv){
 				// Middle
 				relevanceTmp = relevanceVectors[sizeMiddle];
 				relevanceVectorFile << (*it).first;
+				
 				for (std::vector<double>::iterator it = relevanceTmp.begin() ; it != relevanceTmp.end(); ++it){
 						relevanceVectorFile << ", " << (*it);
 				}
@@ -359,7 +380,13 @@ int main(int argc, char** argv){
 				}
 				relevanceVectorFile << std::endl;
 				relevanceVectors.clear();
-				
+				// Clean MHI
+				cvReleaseImage( &mhi );
+				cvReleaseImage( &mask );
+				cvReleaseImage( &motion );
+				lastHistoryFrame = 0;
+				frameCount = 0;
+				if(cvWaitKey(10) >= 0) break;
 			}
 		}
 		cvDestroyWindow( "Motion" );
@@ -372,6 +399,7 @@ int main(int argc, char** argv){
 				std::cout << "FPS: " <<  fps << std::endl;
 				while(true){
 					captionOriginalImage = cvQueryFrame( capture );
+					ImageSize = cvSize(captionOriginalImage->width, captionOriginalImage->height);
 					if(!captionOriginalImage) break;
 					if( !motion ){
 						motion = cvCreateImage( cvSize(captionOriginalImage->width,captionOriginalImage->height), 8, 3);
@@ -382,7 +410,7 @@ int main(int argc, char** argv){
 					if(frameCount > COMPUTE_FRAME_THRESHOLD){
 						frameCount = 0;
 						update_mhi( captionOriginalImage, motion, &mhi, &buf, &silh, &mask, MOTION_HISTORY_SENSITIVITY, &lastHistoryFrame);
-						computeVectors(&mhi, motion, 128, 96);
+						computeVectors(&mhi, motion, ImageSize.width/5, ImageSize.height/5, (ImageSize.width-((ImageSize.width/5)*2))/4, (ImageSize.height-((ImageSize.height/5)*2))/4);
 					}
 					cvShowImage( "Motion", motion );
 					if(cvWaitKey(10) >= 0) break;
@@ -390,6 +418,10 @@ int main(int argc, char** argv){
 				cvReleaseCapture( &capture );
 			}
 		cvDestroyWindow( "Motion" );
+	}
+	}catch(...){
+		std::cout << "ERROR!"<< std::endl;
+		return 0;
 	}
 
 	return 0;
