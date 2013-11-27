@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <sstream>
 #include "opencv/cv.h"
 #include <opencv2/opencv.hpp>
@@ -6,9 +7,11 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <map>
+#define DEBUG 0
 const short COMPUTE_FRAME_THRESHOLD = 0; // How many frames should pass to compute a vector
-const double MOTION_HISTORY_SENSITIVITY = 45; 
+const double MOTION_HISTORY_SENSITIVITY = 50; // ORIG 45
 const double MHI_DURATION = 1;
+const double MGO_DURATION = 1;
 
 void fillVideoMap(std::multimap<char,std::string> *videoFileClass){
 	std::ostringstream fileNameStream;
@@ -106,77 +109,165 @@ std::vector<double> computeVectors(IplImage** mhi, IplImage* dst, short wROI, sh
 	CvPoint center;
 	double magnitude;
 	CvScalar color;
+	CvRect comp_rect;
 	IplImage *orient = 0; // MGO Orientation
 	IplImage *mask = 0;   // MGO valid orientation mask
+	const double MAX_TIME_DELTA = 0.5;
+	const double MIN_TIME_DELTA = 0.05;
 
-	// Calculate motion gradient orientation and valid orientation mask
-	
+	// Calculate Motion Gradient Orientation and valid orientation mask
+	orient	= cvCreateImage( size, IPL_DEPTH_32F, 1 );
+	mask	= cvCreateImage( size, IPL_DEPTH_8U, 1 );
 	cvCalcMotionGradient( (*mhi), mask, orient, MAX_TIME_DELTA, MIN_TIME_DELTA, 3 );
 	
-	/*
-	// Compute Motion on 4x4 Cuadrants
-	std::cout << "--- MOTION CUADRANTS" << std::endl;
-	CvRect comp_rect;
-	int i	 = 25;
+	// Compute Global Motion
+	comp_rect 	= cvRect( 0, 0, size.width, size.height );
+	color 		= CV_RGB(255,255,255);
+	magnitude 	= 100;
+	angle 		= cvCalcGlobalOrientation( orient, mask, (*mhi), timestamp, MGO_DURATION);
+	relevanceVector.push_back(angle);
+	angle 		= 360.0 - angle;  // adjust for images with top-left origin
+	roi 		= cvGetImageROI((*mhi));
+	center 		= cvPoint( (comp_rect.x + comp_rect.width/2), (comp_rect.y + comp_rect.height/2) );
+	cvCircle( dst, center, cvRound(magnitude*1.2), color, 3, CV_AA, 0 );
+	cvLine( dst, center, cvPoint( cvRound( center.x + magnitude*cos(angle*CV_PI/180)),
+	cvRound( center.y - magnitude*sin(angle*CV_PI/180))), color, 3, CV_AA, 0 );
+
+	// Compute Motion on perimetral cuadrants
+	int iwidth = (dst->width / wROI);
+	int iheight = (dst->height / hROI);
+	int w = 0;
 	color = CV_RGB(255,0,0);
 	magnitude = 30;
-	for (int r = 0; r < size.height; r += hROI){
-		for (int c = 0; c < size.width; c += wROI){
-			comp_rect.x = c;
-			comp_rect.y = r;
-			comp_rect.width = (c + wROI > size.width) ? (size.width - c) : wROI;
-			comp_rect.height = (r + hROI > size.height) ? (size.height - r) : hROI;
-
-			cvSetImageROI( mhi, comp_rect );
+	while(w < iwidth){
+		// Top
+			comp_rect.x = w*wROI;
+			comp_rect.y = 0;
+			comp_rect.width = wROI;
+			comp_rect.height = hROI;
+			cvSetImageROI( (*mhi), comp_rect );
 			cvSetImageROI( orient, comp_rect );
 			cvSetImageROI( mask, comp_rect );
-			cvSetImageROI( silh, comp_rect );
-			cvSetImageROI( img, comp_rect );
+			// Process Motion
+			angle = cvCalcGlobalOrientation( orient, mask, (*mhi), timestamp, MHI_DURATION);
+			relevanceVector.push_back(angle);
+			angle = 360.0 - angle;  // adjust for images with top-left origin
+			roi = cvGetImageROI((*mhi));
+			center = cvPoint( (comp_rect.x + comp_rect.width/2),
+					  (comp_rect.y + comp_rect.height/2) );
+			cvCircle( dst, center, cvRound(magnitude*1.2), color, 3, CV_AA, 0 );
+			cvLine( dst, center, cvPoint( cvRound( center.x + magnitude*cos(angle*CV_PI/180)),
+			cvRound( center.y - magnitude*sin(angle*CV_PI/180))), color, 3, CV_AA, 0 );
+			cvResetImageROI( (*mhi) );
+			cvResetImageROI( orient );
+			cvResetImageROI( mask );
+		// Bottom
+			comp_rect.x = w*wROI;
+			comp_rect.y = dst->height - hROI;
+			cvSetImageROI( (*mhi), comp_rect );
+			cvSetImageROI( orient, comp_rect );
+			cvSetImageROI( mask, comp_rect );
+			// COMPUTE
+			angle = cvCalcGlobalOrientation( orient, mask, (*mhi), timestamp, MHI_DURATION);
+			relevanceVector.push_back(angle);
+			angle = 360.0 - angle;  // adjust for images with top-left origin
+			roi = cvGetImageROI((*mhi));
+			center = cvPoint( (comp_rect.x + comp_rect.width/2),
+					  (comp_rect.y + comp_rect.height/2) );
+			cvCircle( dst, center, cvRound(magnitude*1.2), color, 3, CV_AA, 0 );
+			cvLine( dst, center, cvPoint( cvRound( center.x + magnitude*cos(angle*CV_PI/180)),
+			cvRound( center.y - magnitude*sin(angle*CV_PI/180))), color, 3, CV_AA, 0 );
+			cvResetImageROI( (*mhi) );
+			cvResetImageROI( orient );
+			cvResetImageROI( mask );
+		w++;
+	}
+	int h = 1;
+	while(h < (iheight-1)){
+		// Left
+			comp_rect.x = 0;
+			comp_rect.y = h*hROI;
+			comp_rect.width = wROI;
+			comp_rect.height = hROI;
+			cvSetImageROI( (*mhi), comp_rect );
+			cvSetImageROI( orient, comp_rect );
+			cvSetImageROI( mask, comp_rect );
+			// Process Motion
+			angle = cvCalcGlobalOrientation( orient, mask, (*mhi), timestamp, MHI_DURATION);
+			relevanceVector.push_back(angle);
+			angle = 360.0 - angle;  // adjust for images with top-left origin
+			roi = cvGetImageROI((*mhi));
+			center = cvPoint( (comp_rect.x + comp_rect.width/2),
+					  (comp_rect.y + comp_rect.height/2) );
+			cvCircle( dst, center, cvRound(magnitude*1.2), color, 3, CV_AA, 0 );
+			cvLine( dst, center, cvPoint( cvRound( center.x + magnitude*cos(angle*CV_PI/180)),
+			cvRound( center.y - magnitude*sin(angle*CV_PI/180))), color, 3, CV_AA, 0 );
+			cvResetImageROI( (*mhi) );
+			cvResetImageROI( orient );
+			cvResetImageROI( mask );
+		// Right
+			comp_rect.x = dst->width - wROI;
+			comp_rect.y = h*hROI;
+			cvSetImageROI( (*mhi), comp_rect );
+			cvSetImageROI( orient, comp_rect );
+			cvSetImageROI( mask, comp_rect );
+			// Process Motion
+			angle = cvCalcGlobalOrientation( orient, mask, (*mhi), timestamp, MHI_DURATION);
+			relevanceVector.push_back(angle);
+			angle = 360.0 - angle;  // adjust for images with top-left origin
+			roi = cvGetImageROI((*mhi));
+			center = cvPoint( (comp_rect.x + comp_rect.width/2),
+					  (comp_rect.y + comp_rect.height/2) );
+			cvCircle( dst, center, cvRound(magnitude*1.2), color, 3, CV_AA, 0 );
+			cvLine( dst, center, cvPoint( cvRound( center.x + magnitude*cos(angle*CV_PI/180)),
+			cvRound( center.y - magnitude*sin(angle*CV_PI/180))), color, 3, CV_AA, 0 );
+			cvResetImageROI( (*mhi) );
+			cvResetImageROI( orient );
+			cvResetImageROI( mask );
+		h++;
+	}
+	
+	// Compute Motion on 4x4 Cuadrants
+	// Sorry for the HardCoding, lack of time
+	
+	color = CV_RGB(255,0,0);
+	magnitude = 20;
+	for (int r = hROI; r < size.height - hROI; r += 72){
+		for (int c = wROI; c < size.width - wROI; c += 96){
+			comp_rect.x = c;
+			comp_rect.y = r;
+			comp_rect.width = 96;
+			comp_rect.height = 72;
+
+			cvSetImageROI( (*mhi), comp_rect );
+			cvSetImageROI( orient, comp_rect );
+			cvSetImageROI( mask, comp_rect );
 
 			// Process Motion
-			angle = cvCalcGlobalOrientation( orient, mask, mhi, timestamp, MHI_DURATION);
+			angle = cvCalcGlobalOrientation( orient, mask, (*mhi), timestamp, MHI_DURATION);
+			relevanceVector.push_back(angle);
+			
 			angle = 360.0 - angle;  // adjust for images with top-left origin
-			count = cvNorm( silh, 0, CV_L1, 0 ); // calculate number of points within silhouette ROI
-			roi = cvGetImageROI(mhi);
+			roi = cvGetImageROI((*mhi));
 			center = cvPoint( (comp_rect.x + comp_rect.width/2),
 					  (comp_rect.y + comp_rect.height/2) );
 			cvCircle( dst, center, cvRound(magnitude*1.2), color, 3, CV_AA, 0 );
 			cvLine( dst, center, cvPoint( cvRound( center.x + magnitude*cos(angle*CV_PI/180)),
 			cvRound( center.y - magnitude*sin(angle*CV_PI/180))), color, 3, CV_AA, 0 );	
 			
-			if(DEBUG){
-				std::cout << "Motion " << i << " -> x: " << roi.x << " y: " << roi.y << " count: " << count << " angle: " << angle << std::endl; // print the roi
-			}
-			cvResetImageROI( mhi );
+			cvResetImageROI( (*mhi) );
 			cvResetImageROI( orient );
 			cvResetImageROI( mask );
-			cvResetImageROI( silh );
-			cvResetImageROI(img);
-			relevanceDirectionToVector(i, angle);
-			++i;
 		}
 	}
 
-	// Compute Global Motion
 	if(DEBUG){
-		std::cout << "--- MOTION GLOBAL" << std::endl;
+		for (std::vector<double>::iterator it = relevanceVector.begin() ; it != relevanceVector.end(); ++it)
+			std::cout << (*it) << ", ";
+		std::cout << std::endl;
 	}
-	comp_rect = cvRect( 0, 0, size.width, size.height );
-	color = CV_RGB(255,255,255);
-	magnitude = 100;
-	angle = cvCalcGlobalOrientation( orient, mask, mhi, timestamp, MHI_DURATION);
-	angle = 360.0 - angle;  // adjust for images with top-left origin
-	count = cvNorm( silh, 0, CV_L1, 0 ); // calculate number of points within silhouette ROI
-	roi = cvGetImageROI(mhi);
-	center = cvPoint( (comp_rect.x + comp_rect.width/2),
-			  (comp_rect.y + comp_rect.height/2) );
-	cvCircle( dst, center, cvRound(magnitude*1.2), color, 3, CV_AA, 0 );
-	cvLine( dst, center, cvPoint( cvRound( center.x + magnitude*cos(angle*CV_PI/180)),
-	cvRound( center.y - magnitude*sin(angle*CV_PI/180))), color, 3, CV_AA, 0 );
-	if(DEBUG){
-		std::cout << "Motion Main-> x: " << roi.x << " y: " << roi.y << " count: " << count << std::endl; // print the roi
-	}
-	*/
+	
+	return relevanceVector;
 }
 
 int main(int argc, char** argv){
@@ -191,6 +282,7 @@ int main(int argc, char** argv){
 	short 		frameCount = 0;
 	int 		lastHistoryFrame = 0;
 	double 		fps	= 0.0;
+	std::ofstream 	relevanceVectorFile;
 
 	// What to DO
 	short train = 0;
@@ -199,15 +291,17 @@ int main(int argc, char** argv){
 	}
 	
 	if(train){
-		std::vector< std::vector<double>> relevanceVectors;
+		std::vector< std::vector<double> > relevanceVectors;
+		std::vector<double> relevanceTmp;
 		std::ostringstream fileNameStream;
 		// Mapa de Videos
 		std::multimap<char,std::string> videoFileClass;
-		//fillVideoMap(&videoFileClass);
-		videoFileClass.insert(std::pair<char,std::string>('H',"hola00"));
-		videoFileClass.insert(std::pair<char,std::string>('H',"hola01"));
+		fillVideoMap(&videoFileClass);
+		//videoFileClass.insert(std::pair<char,std::string>('H',"hola00"));
+		//videoFileClass.insert(std::pair<char,std::string>('H',"hola01"));
 		// Iterar por cada uno de los videos y obtener su vector de Relevancia
-		cvNamedWindow( "Motion", 1 );	
+		cvNamedWindow( "Motion", 1 );
+		relevanceVectorFile.open ("relevanceVectors.txt");
 		for (std::multimap<char,std::string>::iterator it=videoFileClass.begin(); it!=videoFileClass.end(); ++it){
 			std::cout << "-- INICIANDO ANALISIS DE " << (*it).first << " - " << (*it).second << std::endl;
 			fileNameStream << "../_videos/" << (*it).second << ".avi";
@@ -217,7 +311,6 @@ int main(int argc, char** argv){
 			if(capture){
 				fps = cvGetCaptureProperty(capture, CV_CAP_PROP_FPS);
 				std::cout << "FPS: " <<  fps << std::endl;
-				
 				while(true){
 					captionOriginalImage = cvQueryFrame( capture );
 					if(!captionOriginalImage) break;
@@ -241,11 +334,37 @@ int main(int argc, char** argv){
 				fileNameStream.clear();
 				cvSaveImage(file_name.c_str(), motion);
 				cvReleaseCapture( &capture );
+				// Save the Relevance Vectors
+				int sizeVector = relevanceVectors.size();
+				int sizeMiddle = sizeVector/2;
+				// Middle
+				relevanceTmp = relevanceVectors[sizeMiddle];
+				relevanceVectorFile << (*it).first;
+				for (std::vector<double>::iterator it = relevanceTmp.begin() ; it != relevanceTmp.end(); ++it){
+						relevanceVectorFile << ", " << (*it);
+				}
+				relevanceVectorFile << std::endl;
+				// Last
+				relevanceTmp = relevanceVectors[sizeVector-1];
+				relevanceVectorFile << (*it).first;
+				for (std::vector<double>::iterator it = relevanceTmp.begin() ; it != relevanceTmp.end(); ++it){
+						relevanceVectorFile << ", " << (*it);
+				}
+				relevanceVectorFile << std::endl;
+				// M-Last
+				relevanceTmp = relevanceVectors[((sizeVector-sizeMiddle)/2)+sizeMiddle];
+				relevanceVectorFile << (*it).first;
+				for (std::vector<double>::iterator it = relevanceTmp.begin() ; it != relevanceTmp.end(); ++it){
+						relevanceVectorFile << ", " << (*it);
+				}
+				relevanceVectorFile << std::endl;
+				relevanceVectors.clear();
+				
 			}
 		}
 		cvDestroyWindow( "Motion" );
+		relevanceVectorFile.close();
 	}else{
-		/*
 		cvNamedWindow( "Motion", 1 );	
 			capture = cvCaptureFromCAM(0);
 			if(capture){
@@ -263,7 +382,7 @@ int main(int argc, char** argv){
 					if(frameCount > COMPUTE_FRAME_THRESHOLD){
 						frameCount = 0;
 						update_mhi( captionOriginalImage, motion, &mhi, &buf, &silh, &mask, MOTION_HISTORY_SENSITIVITY, &lastHistoryFrame);
-		    			//computeVectors(image, motion, 128, 96);
+						computeVectors(&mhi, motion, 128, 96);
 					}
 					cvShowImage( "Motion", motion );
 					if(cvWaitKey(10) >= 0) break;
@@ -271,7 +390,6 @@ int main(int argc, char** argv){
 				cvReleaseCapture( &capture );
 			}
 		cvDestroyWindow( "Motion" );
-		*/
 	}
 
 	return 0;

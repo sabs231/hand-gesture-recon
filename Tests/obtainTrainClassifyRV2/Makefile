@@ -7,7 +7,8 @@ LDLIBS			=	 -lopencv_core -lopencv_flann -lopencv_imgproc -lopencv_highgui -lope
 LDFLAGS			=	$(LDLIBS)
 NAME_RELEVANCE	=	obtainTrainClassifyRV2
 OBJS_RELEVANCE	=	$(SRC_RELEVANCE:.cpp=.o)
-RM		=	rm -f
+RM				=	rm -f
+EXTRA_OBJS		=	relevanceVectors.txt
 
 all:			$(NAME_RELEVANCE)
 
@@ -15,7 +16,7 @@ $(NAME_RELEVANCE):	$(OBJS_RELEVANCE)
 				$(CXX) $(CFLAGS) $(OBJS_RELEVANCE) $(LDFLAGS) -o $(NAME_RELEVANCE)
 
 clean:			
-				$(RM) $(OBJS_RELEVANCE)
+				$(RM) $(OBJS_RELEVANCE) $(EXTRA_OBJS)
 
 fclean:			clean
 				$(RM) $(NAME_RELEVANCE)
