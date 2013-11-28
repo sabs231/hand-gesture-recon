@@ -5,20 +5,23 @@
 #include 				"mhiOPCV.hh"
 #include 				"environmentOPCV.hh"
 #include 				"motionDetect.hh"
+#include 				"relevanceVectorOPCV.hh"
 
 #include 				<opencv2/opencv.hpp>
 
 int 						main(int argc, char **argv)
 {
-	int 					width;
-	int 					height;
-	std::string		arg;
-	Input 				*input;
-	Frame 				*image;
-	Frame 				*motion;
-	MHIOPCV 			*myMHI;
-	Environment		*env;
-	MotionDetect 	*detection;
+	short							frameCount;
+	int 							width;
+	int 							height;
+	std::string				arg;
+	Input 						*input;
+	Frame 						*image;
+	Frame 						*motion;
+	MHIOPCV 					*myMHI;
+	Environment				*env;
+	MotionDetect 			*detection;
+	RelevanceVector 	*rv;
 
 	try
 	{
@@ -48,9 +51,11 @@ int 						main(int argc, char **argv)
 		motion = NULL;
 		width = 0;
 		height = 0;
+		frameCount = 0;
 		myMHI = new MHIOPCV();
 		env = new EnvironmentOPCV();
 		detection = new MotionDetect();
+		rv = new RelevanceVectorOPCV(0.5, 0.05);
 		detection->setMHIBehavior(myMHI);
 		while (42) // answer of everything!
 		{
@@ -66,6 +71,11 @@ int 						main(int argc, char **argv)
 				reinterpret_cast<IplImage *>(motion->getImage())->origin = reinterpret_cast<IplImage *>(image->getImage())->origin;
 			}
 			detection->updateMHI(image, motion, env);
+			rv->setWROI(width / 5);
+			rv->setHROI(height / 5);
+			rv->setWSROI((width - ((width / 5) * 2)) / 4);
+			rv->setHSROI((height - ((height / 5) * 2)) / 4);
+			rv->computeVectors(motion, env);
 			motion->showImage("motion");
 			if (cvWaitKey(10) >= 0)
 				break;

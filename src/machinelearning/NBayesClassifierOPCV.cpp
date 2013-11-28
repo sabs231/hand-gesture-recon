@@ -118,7 +118,7 @@ bool 		NBayesClassifierOPCV::train()
 	return (true);
 }
 
-float 		NBayesClassifierOPCV::predict(RelevanceVector<float> *rv)
+float 		NBayesClassifierOPCV::predict(RelevanceVector *rv)
 {
 	float 	prediction;
 	CvMat 	sample = cvMat(1, 51, CV_32FC1, rv->getRelevanceVector());

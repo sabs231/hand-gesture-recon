@@ -4,7 +4,7 @@
 # include 	<opencv2/opencv.hpp>
 # include 	"classifierBehavior.hh"
 
-class 			NBayesClassifierOPCV : public ClassifierBehavior<float>
+class 			NBayesClassifierOPCV : public ClassifierBehavior
 {
 	private:
 		CvNormalBayesClassifier 	*nBayesClass;
@@ -18,7 +18,7 @@ class 			NBayesClassifierOPCV : public ClassifierBehavior<float>
 		~NBayesClassifierOPCV();
 		void 						printMat(CvMat *);
 		virtual bool 		train();
-		virtual float 	predict(RelevanceVector<float> *);
+		virtual float 	predict(RelevanceVector *);
 };
 
 #endif
