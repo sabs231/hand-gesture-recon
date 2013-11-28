@@ -11,8 +11,8 @@
 #define DEBUG 0
 const short COMPUTE_FRAME_THRESHOLD = 0; // How many frames should pass to compute a vector
 const double MOTION_HISTORY_SENSITIVITY = 50;
-const double MHI_DURATION = 7; // 1
-const double MGO_DURATION = 7;
+const double MHI_DURATION = 1; // Para Obtencion de datos : 7
+const double MGO_DURATION = 1; // Para Obtencion de datos : 7
 
 void fillVideoMap(std::multimap<char,std::string> *videoFileClass){
 	std::ostringstream fileNameStream;
@@ -27,6 +27,8 @@ void fillVideoMap(std::multimap<char,std::string> *videoFileClass){
 		fileNameStream.str("");
 		fileNameStream.clear();
 	}
+	
+
 	// Matrimonio
 	for(int i = 1; i < 41; i++){
 		if(i < 10){
@@ -38,6 +40,7 @@ void fillVideoMap(std::multimap<char,std::string> *videoFileClass){
 		fileNameStream.str("");
 		fileNameStream.clear();
 	}
+
 	// Querer
 	for(int i = 1; i < 41; i++){
 		if(i < 10){
@@ -271,6 +274,134 @@ std::vector<double> computeVectors(IplImage** mhi, IplImage* dst, short wROI, sh
 	return relevanceVector;
 }
 
+static int read_num_class_data( const char* filename, int var_count, CvMat** data, CvMat** responses ){
+    const int M = 1024;
+    FILE* f = fopen( filename, "rt" );
+    CvMemStorage* storage;
+    CvSeq* seq;
+    char buf[M+2];
+    float* el_ptr;
+    CvSeqReader reader;
+    int i, j;
+
+    if( !f )
+        return 0;
+
+    el_ptr = new float[var_count+1];
+    storage = cvCreateMemStorage();
+	seq = cvCreateSeq( 0, sizeof(*seq), (var_count+1)*sizeof(float), storage );
+
+    for(;;)
+    {
+        char* ptr;
+        if( !fgets( buf, M, f ) || !strchr( buf, ',' ) )
+            break;
+        el_ptr[0] = buf[0];
+        ptr = buf+2;
+        for( i = 1; i <= var_count; i++ )
+        {
+            int n = 0;
+            sscanf( ptr, "%f%n", el_ptr + i, &n );
+            ptr += n + 1;
+        }
+        if( i <= var_count )
+            break;
+        cvSeqPush( seq, el_ptr );
+    }
+    fclose(f);
+
+    *data = cvCreateMat( seq->total, var_count, CV_32F );
+    *responses = cvCreateMat( seq->total, 1, CV_32F );
+
+    cvStartReadSeq( seq, &reader );
+
+    for( i = 0; i < seq->total; i++ )
+    {
+        const float* sdata = (float*)reader.ptr + 1;
+        float* ddata = data[0]->data.fl + var_count*i;
+        float* dr = responses[0]->data.fl + i;
+
+        for( j = 0; j < var_count; j++ )
+            ddata[j] = sdata[j];
+        *dr = sdata[-1];
+        CV_NEXT_SEQ_ELEM( seq->elem_size, reader );
+    }
+
+    cvReleaseMemStorage( &storage );
+    delete el_ptr;
+    return 1;
+}
+
+static int build_nbayes_classifier( char* data_filename, CvNormalBayesClassifier **nbayes){
+    const int var_count = 33;
+    CvMat* data = 0;
+    CvMat train_data;
+    CvMat* responses;
+
+    int ok = read_num_class_data( data_filename, 33, &data, &responses );
+    int nsamples_all = 0;
+    int i, j;
+    double train_hr = 0, test_hr = 0;
+    CvANN_MLP mlp;
+
+    if( !ok ){
+        printf( "No se pudo leer la información de entrenamiento %s\n", data_filename );
+        return -1;
+    }
+
+    printf( "La base de datos %s está siendo cargada...\n", data_filename );
+    nsamples_all = data->rows;
+
+    printf( "Entrenando el clasificador...\n");
+	// 1. unroll the responses
+    cvGetRows( data, &train_data, 0, nsamples_all);
+    // 2. train classifier
+    CvMat* train_resp = cvCreateMat( nsamples_all, 1, CV_32FC1);
+    for (int i = 0; i < nsamples_all; i++){
+        train_resp->data.fl[i] = responses->data.fl[i];
+	}
+	*nbayes = new CvNormalBayesClassifier(&train_data, train_resp);
+
+    cvReleaseMat( &train_resp );
+    cvReleaseMat( &data );
+    cvReleaseMat( &responses );
+    return 0;
+}
+
+void classify(CvNormalBayesClassifier *nbayes, std::vector<double> relevanceVector){
+	/// Probando el clasificador
+	double relevance[33];
+	int i = 0;
+	for (std::vector<double>::iterator it = relevanceVector.begin() ; it != relevanceVector.end(); ++it){
+		relevance[i] = (*it);
+		i++;
+	}
+	
+	CvMat sample = cvMat(1, 33, CV_32FC1, relevance);
+	CvMat *result = cvCreateMat(1, 1, CV_32FC1);
+	// Predict
+	float prediccion = 0.0000;
+	if(nbayes != NULL){
+		//prediccion = nbayes->predict(&sample, result);
+		//prediccion = nbayes->predict(&sample, 0);
+		prediccion = (float) nbayes->predict(&sample);
+	}
+	// Imprimiendo el Valor
+	printf("Classify = %f\n",prediccion);
+	if(prediccion == 81){
+		std::cout << "QUERER" << std::endl;
+	}else if(prediccion == 77){
+		std::cout << "MATRIMONIO" << std::endl;
+	}else if(prediccion == 72){
+		std::cout << "HOLA" << std::endl;
+	}else{
+		std::cout << "NADA" << std::endl;
+	}
+
+	// Liberando Memoria
+	cvReleaseMat(&result);
+}
+
 int main(int argc, char** argv){
 	/* Variables Globales */
 	IplImage*	motion = 0;
@@ -292,13 +423,13 @@ int main(int argc, char** argv){
 	CvSize		ImageSize;
 	
 	// What to DO
-	short train = 0;
-	if( argc == 2 && strlen(argv[1]) == 5){
-		train = 1;
+	short obtain = 0;
+	if( argc == 2 && strlen(argv[1]) == 6){
+		obtain = 1;
 	}
 	
 	try{
-	if(train){
+	if(obtain){
 		std::vector< std::vector<double> > relevanceVectors;
 		std::ostringstream fileNameStream;
 		// Mapa de Videos
@@ -314,7 +445,7 @@ int main(int argc, char** argv){
 		videoFileClass.insert(std::pair<char,std::string>('M',"matrimonio21"));
 		*/
 		// Iterar por cada uno de los videos y obtener su vector de Relevancia
-		cvNamedWindow( "Motion", 1 );
+		//cvNamedWindow( "Motion", 1 );
 		relevanceVectorFile.open ("relevanceVectors.txt");
 		for (std::multimap<char,std::string>::iterator it=videoFileClass.begin(); it!=videoFileClass.end(); ++it){
 			std::cout << "-- INICIANDO ANALISIS DE " << (*it).first << " - " << (*it).second << std::endl;
@@ -346,7 +477,7 @@ int main(int argc, char** argv){
 						hSROI= (ImageSize.height-((ImageSize.height/5)*2))/4;
 						relevanceVectors.push_back(computeVectors(&mhi, motion, wROI, hROI, wSROI, hSROI));
 					}
-					cvShowImage( "Motion", motion );
+					//cvShowImage( "Motion", motion );
 					if(cvWaitKey(10) >= 0) break;
 				}
 				fileNameStream << "../_generatedImages/" << (*it).second  << ".jpg"; // write to string stream
@@ -379,7 +510,11 @@ int main(int argc, char** argv){
 				for (std::vector<double>::iterator it = relevanceTmp.begin() ; it != relevanceTmp.end(); ++it){
 						relevanceVectorFile << ", " << (*it);
 				}
+				// Clean Relevance Vectors
 				relevanceVectorFile << std::endl;
+				for (std::vector< std::vector<double> >::iterator it = relevanceVectors.begin() ; it != relevanceVectors.end(); ++it){
+					(*it).clear();
+				}
 				relevanceVectors.clear();
 				// Clean MHI
 				cvReleaseImage( &mhi );
@@ -390,10 +525,17 @@ int main(int argc, char** argv){
 				if(cvWaitKey(10) >= 0) break;
 			}
 		}
-		cvDestroyWindow( "Motion" );
+		//cvDestroyWindow( "Motion" );
 		relevanceVectorFile.close();
 	}else{
-		cvNamedWindow( "Motion", 1 );	
+		// Info del clasificador
+		CvNormalBayesClassifier *nbayes;
+		char default_data_filename[] = "./trainData.txt";
+		char* data_filename = default_data_filename;
+		build_nbayes_classifier(data_filename, &nbayes);
+		// Empieza a classificar
+			cvNamedWindow( "Original", 1 );
+			cvNamedWindow( "Motion", 1 );	
 			capture = cvCaptureFromCAM(0);
 			if(capture){
 				fps = cvGetCaptureProperty(capture, CV_CAP_PROP_FPS);
@@ -407,22 +549,25 @@ int main(int argc, char** argv){
 						cvZero( motion );
 						motion->origin = captionOriginalImage->origin;
 					}
-					++frameCount;
-					if(frameCount > COMPUTE_FRAME_THRESHOLD){
-						frameCount = 0;
 						update_mhi( captionOriginalImage, motion, &mhi, &buf, &silh, &mask, MOTION_HISTORY_SENSITIVITY, &lastHistoryFrame);
 						wROI = ImageSize.width/5;
 						hROI = ImageSize.height/5;
 						wSROI= (ImageSize.width-((ImageSize.width/5)*2))/4;
 						hSROI= (ImageSize.height-((ImageSize.height/5)*2))/4;
 						relevanceTmp = computeVectors(&mhi, motion, wROI, hROI, wSROI, hSROI);
+					++frameCount;
+					if(frameCount > 14){
+						frameCount = 0;
+						classify(nbayes, relevanceTmp);
 					}
+					cvShowImage( "Original", captionOriginalImage );
 					cvShowImage( "Motion", motion );
 					if(cvWaitKey(10) >= 0) break;
 				}
 				cvReleaseCapture( &capture );
 			}
 		cvDestroyWindow( "Motion" );
+		cvDestroyWindow( "Original" );
 	}
 	}catch(...){
 		std::cout << "ERROR!"<< std::endl;
