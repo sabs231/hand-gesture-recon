@@ -3,7 +3,7 @@
 
 MHIOPCV::MHIOPCV()
 {
-	this->_diffThreshold = 0;
+	this->_diffThreshold = 50;
 	this->_cyclicFrame = 4;
 	this->_mhiDuration = 1;
 	this->_buf = NULL;
@@ -86,33 +86,19 @@ void 	MHIOPCV::update(Frame *src, Frame *dest, Environment *env)
 		cvReleaseImage(&mask);
 		mhi = cvCreateImage(size, IPL_DEPTH_32F, 1);
 		cvZero(mhi);
-		env->setMHI(mhi);
+		env->setMHI(reinterpret_cast<void *>(mhi));
 		mask = cvCreateImage(size, IPL_DEPTH_8U, 1);
-		env->setMask(mask);
+		env->setMask(reinterpret_cast<void *>(mask));
 	}
 	cvCvtColor(reinterpret_cast<IplImage *>(src->getImage()), this->_buf[last], CV_BGR2GRAY);
 	idx2 = (last + 1) % this->_cyclicFrame;
 	last = idx2;
 	env->setLast(last);
-	silh = this->_buf[idx2];
-	env->setSilh(silh);
-	silh = reinterpret_cast<IplImage *>(env->getSilh());
-	cvAbsDiff(this->_buf[idx1], this->_buf[idx2], silh);
-	env->setSilh(silh);
-	silh = reinterpret_cast<IplImage *>(env->getSilh());
-	cvThreshold(silh, silh, this->_diffThreshold, 255, CV_THRESH_BINARY);
-	env->setSilh(silh);
-	silh = reinterpret_cast<IplImage *>(env->getSilh());
-	cvUpdateMotionHistory(silh, mhi, timeStamp, this->_mhiDuration);
-	env->setMHI(mhi);
-	mhi = reinterpret_cast<IplImage *>(env->getMHI());
-	cvCvtScale(mhi, mask, 255./this->_mhiDuration, (this->_mhiDuration - timeStamp) * 255./this->_mhiDuration);
-	env->setMask(mask);
-	mask = reinterpret_cast<IplImage *>(env->getMask());
-	env->setMHI(mhi);
-	mhi = reinterpret_cast<IplImage *>(env->getMHI());
+	env->setSilh(reinterpret_cast<void *>(this->_buf[idx2]));
+	cvAbsDiff(this->_buf[idx1], this->_buf[idx2], reinterpret_cast<IplImage *>(env->getSilh()));
+	cvThreshold(reinterpret_cast<IplImage *>(env->getSilh()), reinterpret_cast<IplImage *>(env->getSilh()), this->_diffThreshold, 255, CV_THRESH_BINARY);
+	cvUpdateMotionHistory(reinterpret_cast<IplImage *>(env->getSilh()), reinterpret_cast<IplImage *>(env->getMHI()), timeStamp, this->_mhiDuration);
+	cvCvtScale(reinterpret_cast<IplImage *>(env->getMHI()), reinterpret_cast<IplImage *>(env->getMask()), 255./this->_mhiDuration, (this->_mhiDuration - timeStamp) * 255./this->_mhiDuration);
 	cvZero(reinterpret_cast<IplImage *>(dest->getImage()));
-	cvMerge(mask, 0, 0, 0, reinterpret_cast<IplImage *>(dest->getImage()));
-	env->setMask(mask);
-	mask = reinterpret_cast<IplImage *>(env->getMask());
+	cvMerge(reinterpret_cast<IplImage *>(env->getMask()), 0, 0, 0, reinterpret_cast<IplImage *>(dest->getImage()));
 }

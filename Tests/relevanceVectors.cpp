@@ -255,7 +255,6 @@ static void  update_mhi( IplImage* img, IplImage* dst, int diff_threshold, int f
 		mask = cvCreateImage( size, IPL_DEPTH_8U, 1 );
 	}
 
-	std::cout << "Last: " << last << std::endl;
 	cvCvtColor( img, buf[last], CV_BGR2GRAY ); // convert frame to grayscale
 	idx2 = (last + 1) % N; // index of (last - (N-1))th frame
 	last = idx2;
@@ -264,6 +263,7 @@ static void  update_mhi( IplImage* img, IplImage* dst, int diff_threshold, int f
 	cvAbsDiff( buf[idx1], buf[idx2], silh ); // get difference between frames
 
 	cvThreshold( silh, silh, diff_threshold, 255, CV_THRESH_BINARY); // and threshold it
+	cvShowImage("hey apple", silh);
 	cvUpdateMotionHistory( silh, mhi, timestamp, MHI_DURATION ); // update MHI
 
 	// convert MHI to blue 8u image
@@ -311,7 +311,7 @@ int main(int argc, char** argv){
 	    }else{
 		++frameCount;
 	    }
-            cvShowImage( "Motion", motion );
+            //cvShowImage( "Motion", motion );
             if( cvWaitKey(10) >= 0 )
                 break;
         }

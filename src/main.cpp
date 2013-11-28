@@ -62,12 +62,11 @@ int 						main(int argc, char **argv)
 				reinterpret_cast<IplImage *>(motion->getImage())->origin = reinterpret_cast<IplImage *>(image->getImage())->origin;
 			}
 			myMHI->update(image, motion, env);
-			image->showImage("original");
-			motion->showImage("tu mama");
+			motion->showImage("motion");
 			if (cvWaitKey(10) >= 0)
 				break;
 		}
-		cvDestroyWindow("original");
+		cvDestroyWindow("motion");
 	}
 	catch (std::exception *e)
 	{
