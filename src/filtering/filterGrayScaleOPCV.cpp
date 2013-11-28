@@ -5,7 +5,7 @@ FilterGrayScaleOPCV::FilterGrayScaleOPCV()
 {
 }
 
-FilterGrayScaleOPCV::~FilterGrayScale()
+FilterGrayScaleOPCV::~FilterGrayScaleOPCV()
 {
 }
 
@@ -16,5 +16,5 @@ void 	FilterGrayScaleOPCV::doFilter(Frame *src, Frame *dest)
 
 	mySrc = reinterpret_cast<IplImage *>(src->getImage());
 	myDest = reinterpret_cast<IplImage *>(dest->getImage());
-	cvCvtColot(mySrc, myDest, CV_BGR2GRAY);
+	cvCvtColor(mySrc, myDest, CV_BGR2GRAY);
 }

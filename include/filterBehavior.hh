@@ -8,7 +8,7 @@ class 			Frame;
 class 			FilterBehavior
 {
 	public:
-		virtual 				~FilterBehavior();
+		virtual 				~FilterBehavior(){}
 		virtual void 		doFilter(Frame *, Frame *) = 0;
 };
 

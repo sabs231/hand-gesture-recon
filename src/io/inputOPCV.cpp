@@ -1,4 +1,5 @@
 #include 	"inputOPCV.hh"
+#include 	"frameOPCV.hh"
 
 InputOPCV::InputOPCV()
 {
@@ -40,14 +41,15 @@ void 			InputOPCV::release()
 
 Frame 		*InputOPCV::getFrame()
 {
-	IplImage 	*img;
-	Frame 		*nextFrame;
+	IplImage 		*img;
+	FrameOPCV 	*nextFrame;
 
 	img = cvQueryFrame(this->_capture);
 	if (img)
 	{
 		nextFrame = new FrameOPCV(img->width, img->height, img->depth, img->nChannels);
-		return (nextFrame);
+		nextFrame->setIplImage(img);
+		return (dynamic_cast<Frame *>(nextFrame));
 	}
 	return (NULL);
 }

@@ -1,6 +1,6 @@
 #include 	"environmentOPCV.hh"
 
-Environment::Environment()
+EnvironmentOPCV::EnvironmentOPCV()
 {
 	this->_silh = NULL;
 	this->_mhi = NULL;
@@ -10,40 +10,33 @@ Environment::Environment()
 	this->_last = 0;
 }
 		
-static EnvironmentOPCV *	EnvironmentOPCV::getInstance()
-{
-	if (!this->_uniqueInstance)
-		this->_uniqueInstance = new EnvironmentOPCV();
-	return (this->_uniqueInstance);
-}
-
 EnvironmentOPCV::~EnvironmentOPCV()
 {
 }
 
 void 							*EnvironmentOPCV::getSilh()
 {
-	return (this->_silh);
+	return (reinterpret_cast<void *>(this->_silh));
 }
 
 void 							*EnvironmentOPCV::getMHI()
 {
-	return (this->_mhi);
+	return (reinterpret_cast<void *>(this->_mhi));
 }
 
 void 							*EnvironmentOPCV::getOrient()
 {
-	return (this->_orient);
+	return (reinterpret_cast<void *>(this->_orient));
 }
 
 void 							*EnvironmentOPCV::getMask()
 {
-	return (this->_mask);
+	return (reinterpret_cast<void *>(this->_mask));
 }
 
 void 							*EnvironmentOPCV::getSegmask()
 {
-	return (this->_segmask);
+	return (reinterpret_cast<void *>(this->_segmask));
 }
 
 int 							EnvironmentOPCV::getLast()
@@ -51,29 +44,29 @@ int 							EnvironmentOPCV::getLast()
 	return (this->_last);
 }
 
-void 							EnvironmnetOPCV::setSilh(void *si)
+void 							EnvironmentOPCV::setSilh(void *si)
 {
-	this->_silh = si;
+	this->_silh = reinterpret_cast<IplImage *>(si);
 }
 
-void 							EnvironmnetOPCV::setMHI(void *mhi)
+void 							EnvironmentOPCV::setMHI(void *mhi)
 {
-	this->_mhi = mhi;
+	this->_mhi = reinterpret_cast<IplImage *>(mhi);
 }
 
-void 							EnvironmnetOPCV::setOrient(void *ori)
+void 							EnvironmentOPCV::setOrient(void *ori)
 {
-	this->_orient = ori;
+	this->_orient = reinterpret_cast<IplImage *>(ori);
 }
 
-void 							EnvironmnetOPCV::setMask(void *mask)
+void 							EnvironmentOPCV::setMask(void *mask)
 {
-	this->_mask = mask;
+	this->_mask = reinterpret_cast<IplImage *>(mask);
 }
 
-void 							EnvironmnetOPCV::setSegmask(void *segm)
+void 							EnvironmentOPCV::setSegmask(void *segm)
 {
-	this->_segmask = segm;
+	this->_segmask = reinterpret_cast<IplImage *>(segm);
 }
 
 void 							EnvironmentOPCV::setLast(int last)

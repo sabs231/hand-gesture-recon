@@ -12,10 +12,11 @@ class 			FrameOPCV : public Frame, public FrameImage
 	public:
 		FrameOPCV();
 		FrameOPCV(int, int, int, int);
-		~FrameImageOPCV();
+		~FrameOPCV();
 		IplImage 			*getIplImage();
 		void 					setIplImage(IplImage *);
 		virtual void 	*getImage();
+		virtual void 	showImage(const std::string &);
 		virtual int 	getWidth() const;
 		virtual int 	getHeight() const;
 		virtual	int 	getOrigin() const;

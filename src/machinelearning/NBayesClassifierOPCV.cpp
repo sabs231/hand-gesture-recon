@@ -2,6 +2,7 @@
 #include 				<cstring>
 #include 				<iostream>
 #include 				"nBayesClassifierOPCV.hh"
+#include 				"exception.hh"
 
 bool 						NBayesClassifierOPCV::readNumClassData(const char *fileName, int varCount)
 {
@@ -14,6 +15,7 @@ bool 						NBayesClassifierOPCV::readNumClassData(const char *fileName, int varC
 	float 				*el_ptr;
 	char 					*ptr;
 	int 					n;
+	int 					i;
 	CvSeqReader 	reader;
 	CvMemStorage 	*storage;
 	CvSeq 				*seq;
@@ -29,11 +31,11 @@ bool 						NBayesClassifierOPCV::readNumClassData(const char *fileName, int varC
 			break;
 		el_ptr[0] = buf[0];
 		ptr = buf + 2;
-		for (int i = 1; i <= varCount; i++)
+		for (i = 1; i <= varCount; i++)
 		{
 			n = 0;
 			sscanf(ptr, "%f%n", el_ptr + i, &n);
-			ptr = n + 1;
+			ptr += n + 1;
 		}
 		if (i <= varCount)
 			break;
@@ -46,8 +48,8 @@ bool 						NBayesClassifierOPCV::readNumClassData(const char *fileName, int varC
 	for (int i = 0; i < seq->total; i++)
 	{
 		sdata = (float *)reader.ptr + 1;
-		ddata = this->data[0]->data.fl + varCount * i;
-		dr = this->responses[0]->data.fl + i;
+		ddata = this->data->data.fl + varCount * i;
+		dr = this->responses->data.fl + i;
 		for (int j = 0; j < varCount; j++)
 			ddata[j] = sdata[j];
 		*dr = sdata[-1];
@@ -67,9 +69,9 @@ NBayesClassifierOPCV::NBayesClassifierOPCV(const char *fileName)
 
 NBayesClassifierOPCV::~NBayesClassifierOPCV()
 {
-	cvReleaseMat(this->trainResp);
-	cvReleaseMat(this->data);
-	cvReleaseMat(this->responses);
+	cvReleaseMat(&this->trainResp);
+	cvReleaseMat(&this->data);
+	cvReleaseMat(&this->responses);
 	if (this->nBayesClass)
 		delete this->nBayesClass;
 }
@@ -84,12 +86,12 @@ void 		NBayesClassifierOPCV::printMat(CvMat *m)
 			case CV_32F:
 			case CV_64F:
 				for (int j = 0; j < m->cols; j++)
-					fprintf(stdout, "%8.3f", (float)cvGetReal2D(m, i, j))
+					fprintf(stdout, "%8.3f", (float)cvGetReal2D(m, i, j));
 				break;
 			case CV_8U:
 			case CV_16U:
 				for (int j = 0; j < m->cols; j++)
-					fprintf(stdout, "6d", (int)cvGetReal2D(m, i, j));
+					fprintf(stdout, "%6d", (int)cvGetReal2D(m, i, j));
 				break;
 			default:
 				break;
@@ -103,23 +105,23 @@ bool 		NBayesClassifierOPCV::train()
 	int 	nSamplesAll = 0;
 
 	nSamplesAll = this->data->rows;
-	std::string << "Loading database..." << std::endl;
-	std::string << "Trainning..." << std::endl;
+	std::cout << "Loading database..." << std::endl;
+	std::cout << "Trainning..." << std::endl;
 	cvGetRows(this->data, this->trainData, 0, nSamplesAll); 
-	this->trainResp = cvCreateMat(nSamplesAll, 1, CV_32C1);
+	this->trainResp = cvCreateMat(nSamplesAll, 1, CV_32FC1);
 	for (int i = 0; i < nSamplesAll; i++)
 		this->trainResp->data.fl[i] = this->responses->data.fl[i];
 	this->nBayesClass->train(this->trainData, this->trainResp);
-	cvReleaseMat(this->trainResp);
-	cvReleaseMat(this->data);
-	cvReleaseMat(this->responses);
+	cvReleaseMat(&this->trainResp);
+	cvReleaseMat(&this->data);
+	cvReleaseMat(&this->responses);
 	return (true);
 }
 
-float 		NBayesClassifierOPCV::predict(RelevanceVector<float> *rV)
+float 		NBayesClassifierOPCV::predict(RelevanceVector<float> *rv)
 {
 	float 	prediction;
-	CvMat 	sample = cvMat(1, 51, CV_32FC1, rv->getRelevanceVector);
+	CvMat 	sample = cvMat(1, 51, CV_32FC1, rv->getRelevanceVector());
 
 	prediction = 0.0000;
 	if (this->nBayesClass)
@@ -128,4 +130,5 @@ float 		NBayesClassifierOPCV::predict(RelevanceVector<float> *rV)
 		this->printMat(&sample);
 	}
 	std::cout << "Prediction: " << prediction << std::endl;
+	return (prediction);
 }

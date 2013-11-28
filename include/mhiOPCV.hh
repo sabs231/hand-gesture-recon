@@ -9,13 +9,12 @@ class 			MHIOPCV : public MHIBehavior
 {
 	private:
 		int 			_diffThreshold;
-		int 			_frameCount;
 		int 			_cyclicFrame;
 		double 		_mhiDuration;
 		IplImage 	**_buf;
 	public:
 		MHIOPCV();
-		MHIOPCV(int, int);
+		MHIOPCV(int);
 		~MHIOPCV();
 		int 					getDiffThreshold() const;
 		int 					getFrameCount() const;

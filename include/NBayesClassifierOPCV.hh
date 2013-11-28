@@ -2,9 +2,9 @@
 # define NBAYESCLASSIFIEROPCV_HH_
 
 # include 	<opencv2/opencv.hpp>
-# include 	"classifierBehavior.h"
+# include 	"classifierBehavior.hh"
 
-class 			NBayesClassifierOPCV : public ClassifierBehavior
+class 			NBayesClassifierOPCV : public ClassifierBehavior<float>
 {
 	private:
 		CvNormalBayesClassifier 	*nBayesClass;

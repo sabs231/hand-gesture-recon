@@ -3,12 +3,13 @@
 
 #include 	"relevanceVector.hpp"
 
+template 	<typename T>
 class 		ClassifierBehavior
 {
 	public:
 		virtual 				~ClassifierBehavior(){}
 		virtual bool 		train() = 0;
-		virtual float 	predict(RelevanceVector *) = 0;
+		virtual float 	predict(RelevanceVector<T> *) = 0;
 };
 
 #endif

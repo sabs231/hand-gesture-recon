@@ -55,7 +55,7 @@ void recognition(){
 }
 
 static void computeVectors( IplImage* img, IplImage* dst, short wROI, short hROI){
-	std::cout << "-- VECTOR COMPUTING" << std::endl;
+	//std::cout << "-- VECTOR COMPUTING" << std::endl;
 	double timestamp = (double)clock()/CLOCKS_PER_SEC; // get current time in seconds
 	CvSize size = cvSize(img->width,img->height); // get current frame size 640x480
 	int i, idx1 = last, idx2;
@@ -69,22 +69,22 @@ static void computeVectors( IplImage* img, IplImage* dst, short wROI, short hROI
 	CvScalar color;
 
 	//--SURF CORNERS--
-	std::cout << "--- SURF CORNERS" << std::endl;
+//	std::cout << "--- SURF CORNERS" << std::endl;
         color = CV_RGB(0,255,0);
         CvMemStorage* storage2 = cvCreateMemStorage(0);
         CvSURFParams params = cvSURFParams(SURF_THRESHOLD, 1);
         CvSeq *imageKeypoints = 0, *imageDescriptors = 0;
         cvExtractSURF( dst, 0, &imageKeypoints, &imageDescriptors, storage2, params );
-        printf("Image Descriptors: %d\n", imageDescriptors->total);
+        //printf("Image Descriptors: %d\n", imageDescriptors->total);
         for( int j = 0; j < imageKeypoints->total; j++ ){
             CvSURFPoint* r = (CvSURFPoint*)cvGetSeqElem( imageKeypoints, j );
-            printf("j: %d \t", j);               
-            printf("total: %d \t", imageKeypoints->total);               
-            printf("valor hessiano: %f \t", r->hessian);
+            //printf("j: %d \t", j);               
+            //printf("total: %d \t", imageKeypoints->total);               
+            //printf("valor hessiano: %f \t", r->hessian);
             center.x = cvRound(r->pt.x);
             center.y = cvRound(r->pt.y);
-            printf("x: %d \t", center.x);
-            printf("y: %d \n", center.y);
+            //printf("x: %d \t", center.x);
+            //printf("y: %d \n", center.y);
 		// Agrego el Punto en donde es la region que nos interesa
             	cvCircle( dst, center, cvRound(r->hessian*0.02), color, 3, CV_AA, 0 );
 		// Lleno la matriz con los vectores
@@ -97,7 +97,7 @@ static void computeVectors( IplImage* img, IplImage* dst, short wROI, short hROI
 	cvCalcMotionGradient( mhi, mask, orient, MAX_TIME_DELTA, MIN_TIME_DELTA, 3 );
 	
 	// Compute Motion on 4x4 Cuadrants
-	std::cout << "--- MOTION CUADRANTS" << std::endl;
+	//std::cout << "--- MOTION CUADRANTS" << std::endl;
 	i	 = 0;
 	color = CV_RGB(255,0,0);
 	magnitude = 30;
@@ -125,7 +125,7 @@ static void computeVectors( IplImage* img, IplImage* dst, short wROI, short hROI
 			cvLine( dst, center, cvPoint( cvRound( center.x + magnitude*cos(angle*CV_PI/180)),
 			cvRound( center.y - magnitude*sin(angle*CV_PI/180))), color, 3, CV_AA, 0 );	
 
-			std::cout << "Motion " << i << " -> x: " << roi.x << " y: " << roi.y << " count: " << count << std::endl; // print the roi
+			//std::cout << "Motion " << i << " -> x: " << roi.x << " y: " << roi.y << " count: " << count << std::endl; // print the roi
 
 			cvResetImageROI( mhi );
 			cvResetImageROI( orient );
@@ -137,7 +137,7 @@ static void computeVectors( IplImage* img, IplImage* dst, short wROI, short hROI
 	}
 
 	// Compute Global Motion
-	std::cout << "--- MOTION GLOBAL" << std::endl;
+	//std::cout << "--- MOTION GLOBAL" << std::endl;
 	comp_rect = cvRect( 0, 0, size.width, size.height );
 	color = CV_RGB(255,255,255);
 	magnitude = 100;
@@ -150,7 +150,7 @@ static void computeVectors( IplImage* img, IplImage* dst, short wROI, short hROI
 	cvCircle( dst, center, cvRound(magnitude*1.2), color, 3, CV_AA, 0 );
 	cvLine( dst, center, cvPoint( cvRound( center.x + magnitude*cos(angle*CV_PI/180)),
 	cvRound( center.y - magnitude*sin(angle*CV_PI/180))), color, 3, CV_AA, 0 );	
-	std::cout << "Motion Main-> x: " << roi.x << " y: " << roi.y << " count: " << count << std::endl; // print the roi
+	//std::cout << "Motion Main-> x: " << roi.x << " y: " << roi.y << " count: " << count << std::endl; // print the roi
 
 
 	/*
@@ -255,6 +255,7 @@ static void  update_mhi( IplImage* img, IplImage* dst, int diff_threshold, int f
 		mask = cvCreateImage( size, IPL_DEPTH_8U, 1 );
 	}
 
+	std::cout << "Last: " << last << std::endl;
 	cvCvtColor( img, buf[last], CV_BGR2GRAY ); // convert frame to grayscale
 	idx2 = (last + 1) % N; // index of (last - (N-1))th frame
 	last = idx2;

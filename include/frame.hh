@@ -1,21 +1,22 @@
 #ifndef FRAME_HH_
 # define FRAME_HH_
 
-# include 	<string>
 # include 	<map>
+# include 	<string>
 # include 	"filter.hh"
 # include 	"frameImage.hh"
 
 class 			Frame
 {
 	protected:
-		std::map<const std::string &, Filter *> *_filter;
+		std::map<std::string, Filter *> *_filter;
 	public:
 		Frame();
 		virtual ~Frame();
-		void 								addFilter(const std::string &, Filter *);
-		void 								removeFilter(const std::string &);
+		void 								addFilter(std::string, Filter *);
+		void 								removeFilter(std::string);
 		virtual void 				*getImage() = 0;
+		virtual void 				showImage(const std::string &) = 0;
 };
 
 #endif

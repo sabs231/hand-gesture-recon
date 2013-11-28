@@ -7,7 +7,7 @@
 class 			MHIBehavior
 {
 	public:
-		virtual 			~MHIBehavior();
+		virtual 			~MHIBehavior(){}
 		virtual void 	update(Frame *, Frame *, Environment *) = 0;
 };
 

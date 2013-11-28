@@ -7,16 +7,14 @@
 class 			EnvironmentOPCV : public Environment
 {
 	private:
-		static EnvironmentOPCV 		*_uniqueInstance;
 		IplImage 									*_silh;
 		IplImage 									*_mhi;
 		IplImage 									*_orient;
 		IplImage 									*_mask;
 		IplImage 									*_segmask;
 		int 											_last;
-		Environment();
 	public:
-		static EnvironmentOPCV * 	getInstance();
+		EnvironmentOPCV();
 		~EnvironmentOPCV();
 		virtual void 							*getSilh();
 		virtual void 							*getMHI();
