@@ -16,7 +16,7 @@ const double MGO_DURATION = 1; // Para Obtencion de datos : 7
 
 void fillVideoMap(std::multimap<char,std::string> *videoFileClass){
 	std::ostringstream fileNameStream;
-	// Hola
+	/* Hola
 	for(int i = 0; i < 31; i++){
 		if(i < 10){
 			fileNameStream << "hola0" << i;
@@ -27,8 +27,6 @@ void fillVideoMap(std::multimap<char,std::string> *videoFileClass){
 		fileNameStream.str("");
 		fileNameStream.clear();
 	}
-	
-
 	// Matrimonio
 	for(int i = 1; i < 41; i++){
 		if(i < 10){
@@ -40,7 +38,7 @@ void fillVideoMap(std::multimap<char,std::string> *videoFileClass){
 		fileNameStream.str("");
 		fileNameStream.clear();
 	}
-
+	*/
 	// Querer
 	for(int i = 1; i < 41; i++){
 		if(i < 10){
@@ -52,6 +50,7 @@ void fillVideoMap(std::multimap<char,std::string> *videoFileClass){
 		fileNameStream.str("");
 		fileNameStream.clear();
 	}
+	
 }
 
 // parameters:
@@ -100,6 +99,34 @@ static void  update_mhi( IplImage* img, IplImage* dst, IplImage** mhi, IplImage*
 	cvCvtScale( (*mhi), (*mask), 255./MHI_DURATION, (MHI_DURATION - timestamp)*255./MHI_DURATION );
 	cvZero( dst );
 	cvMerge( (*mask), 0, 0, 0, dst );
+}
+
+double relevanceDirectionToVector(int angle){
+	if((angle >= 0 && angle <= 22) || (angle > 338 && angle <=360)){
+		// Right
+		return 2.0;
+	}else if(angle > 22 && angle <= 68){
+		// Top-Right
+		return 4.0;
+	}else if(angle > 68 && angle <= 113){
+		// Top
+		return 0.0;
+	}else if(angle > 113 && angle <= 158){
+		// Top-Left
+		return 5.0;
+	}else if(angle > 158 && angle <= 203){
+		// Left
+		return 3.0;
+	}else if(angle > 203 && angle <= 248){
+		// Bottom-left
+		return 7.0;
+	}else if(angle > 248 && angle <= 293){
+		// Bottom
+		return 1.0;
+	}else if(angle > 293 && angle <= 338){
+		// Bottom-Right
+		return 6.0;
+	}
 }
 
 // parameters:
@@ -250,7 +277,6 @@ std::vector<double> computeVectors(IplImage** mhi, IplImage* dst, short wROI, sh
 			// Process Motion
 			angle = cvCalcGlobalOrientation( orient, mask, (*mhi), timestamp, MHI_DURATION);
 			relevanceVector.push_back(angle);
-			
 			angle = 360.0 - angle;  // adjust for images with top-left origin
 			roi = cvGetImageROI((*mhi));
 			center = cvPoint( (comp_rect.x + comp_rect.width/2),
@@ -497,15 +523,8 @@ int main(int argc, char** argv){
 						relevanceVectorFile << ", " << (*it);
 				}
 				relevanceVectorFile << std::endl;
-				// Last
-				relevanceTmp = relevanceVectors[sizeVector-1];
-				relevanceVectorFile << (*it).first;
-				for (std::vector<double>::iterator it = relevanceTmp.begin() ; it != relevanceTmp.end(); ++it){
-						relevanceVectorFile << ", " << (*it);
-				}
-				relevanceVectorFile << std::endl;
-				// M-Last
-				relevanceTmp = relevanceVectors[((sizeVector-sizeMiddle)/2)+sizeMiddle];
+				// 3/4th
+				relevanceTmp = relevanceVectors[sizeMiddle + (sizeMiddle/2)];
 				relevanceVectorFile << (*it).first;
 				for (std::vector<double>::iterator it = relevanceTmp.begin() ; it != relevanceTmp.end(); ++it){
 						relevanceVectorFile << ", " << (*it);
