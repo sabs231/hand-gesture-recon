@@ -13,7 +13,8 @@ SRC_IO			=		src/io/frame.cpp		\
 SIOBJ			=		$(SRC_IO:.cpp=.o)
 
 SRC_MD			=		src/motiondetection/environmentOPCV.cpp		\
-						src/motiondetection/mhiOPCV.cpp
+						src/motiondetection/mhiOPCV.cpp				\
+						src/motiondetection/motionDetect.cpp
 
 SMDOBJ			=		$(SRC_MD:.cpp=.o)
 

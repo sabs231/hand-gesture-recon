@@ -4,6 +4,7 @@
 #include 				"frameOPCV.hh"
 #include 				"mhiOPCV.hh"
 #include 				"environmentOPCV.hh"
+#include 				"motionDetect.hh"
 
 #include 				<opencv2/opencv.hpp>
 
@@ -17,6 +18,7 @@ int 						main(int argc, char **argv)
 	Frame 				*motion;
 	MHIOPCV 			*myMHI;
 	Environment		*env;
+	MotionDetect 	*detection;
 
 	try
 	{
@@ -48,6 +50,8 @@ int 						main(int argc, char **argv)
 		height = 0;
 		myMHI = new MHIOPCV();
 		env = new EnvironmentOPCV();
+		detection = new MotionDetect();
+		detection->setMHIBehavior(myMHI);
 		while (42) // answer of everything!
 		{
 			image = input->getFrame();
@@ -61,7 +65,7 @@ int 						main(int argc, char **argv)
 				cvZero(reinterpret_cast<IplImage *>(motion->getImage())); // this will change
 				reinterpret_cast<IplImage *>(motion->getImage())->origin = reinterpret_cast<IplImage *>(image->getImage())->origin;
 			}
-			myMHI->update(image, motion, env);
+			detection->updateMHI(image, motion, env);
 			motion->showImage("motion");
 			if (cvWaitKey(10) >= 0)
 				break;
