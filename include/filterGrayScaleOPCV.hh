@@ -8,7 +8,7 @@ class 			FilterGrayScaleOPCV : public FilterBehavior
 	public:
 		FilterGrayScaleOPCV();
 		~FilterGrayScale();
-		virtual void 	doFilter(FrameImage *, FrameImage *);
+		virtual void 	doFilter(Frame *, Frame *);
 };
 
 #endif

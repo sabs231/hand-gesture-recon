@@ -37,6 +37,6 @@ FileReadException::FileReadException(const std::string & msg) throw()
 {
 }
 
-virtual FileReadException::~FileReadException(void) throw()
+FileReadException::~FileReadException(void) throw()
 {
 }

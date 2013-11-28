@@ -9,7 +9,12 @@ FilterGrayScaleOPCV::~FilterGrayScale()
 {
 }
 
-void 	FilterGrayScaleOPCV::doFilter(FrameImage *src, FrameImage *dest)
+void 	FilterGrayScaleOPCV::doFilter(Frame *src, Frame *dest)
 {
-	cvCvtColot(src->getIplImage(), dest->getIplImage(), CV_BGR2GRAY);
+	IplImage 	*mySrc;
+	IplImage 	*myDest;
+
+	mySrc = reinterpret_cast<IplImage *>(src->getImage());
+	myDest = reinterpret_cast<IplImage *>(dest->getImage());
+	cvCvtColot(mySrc, myDest, CV_BGR2GRAY);
 }

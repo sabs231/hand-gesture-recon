@@ -2,13 +2,32 @@ SRC_EXCEP		=		src/exception/exception.cpp
 
 SEOBJ			=		$(SRC_EXCEP:.cpp=.o)
 
+SRC_FIL			=		src/filtering/filterGrayScale.cpp
+
+SFOBJ			=		$(SRC_FIL:.cpp=.o)
+
+SRC_IO			=		src/io/frame.cpp		\
+						src/io/frameOPCV.cpp	\
+						src/io/inputOPCV.cpp
+
+SIOBJ			=		$(SRC_IO:.cpp=.o)
+
+SRC_MD			=		src/motiondetection/environmentOPCV.cpp		\
+						src/motiondetection/mhiOPCV.cpp
+
+SMDOBJ			=		$(SRC_MD:.cpp=.o)
+
+SRC_ML			=		src/machinelearning/NBayesClassifierOPCV.cpp
+
+SMLOBJ			=		$(SRC_ML:.cpp=.o)
+
 SRC				=		src/main.cpp
 
 SOBJ			=		$(SRC:.cpp=.o)
 
 NAME			=		bin/grecon
 
-CXX				=		clang++
+CXX				=		g++
 
 CXXFLAGS		+=		-I./include
 
@@ -25,13 +44,17 @@ ECHO			=		echo
 
 all:			$(NAME)
 
-$(NAME):		$(SEOBJ) $(SOBJ)
-				$(CXX) $(SEOBJ) $(SOBJ) $(OPENCVLIB) -o $(NAME)
+$(NAME):		$(SEOBJ) $(SIOBJ) $(SFOBJ) $(SMDOBJ) $(SMLOBJ) $(SOBJ)
+				$(CXX) $(SEOBJ) $(SIOBJ) $(SFOBJ) $(SMDOBJ) $(SMLOBJ) $(SOBJ) $(OPENCVLIB) -o $(NAME)
 				@$(ECHO) '---> grecon compiled'
 
 clean:
 				$(RM) $(SEOBJ)
 				$(RM) $(SOBJ)
+				$(RM) $(SIOBJ) 
+				$(RM) $(SFOBJ)
+				$(RM) $(SMDOBJ)
+				$(RM) $(SMLOBJ)
 				@$(ECHO) '---> directory cleaned'
 
 fclean:			clean

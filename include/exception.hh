@@ -33,6 +33,6 @@ class FileReadException : public Exception
 	public:
 		FileReadException(const std::string & msg) throw();
 		virtual ~FileReadException(void) throw();
-}
+};
 
 #endif

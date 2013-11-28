@@ -11,7 +11,7 @@ class 			Filter
 		Filter();
 		~Filter();
 		void 	setFilter(FilterBehavior *);
-		void 	performFilter(FrameImage *, FrameImage *);
+		void 	performFilter(Frame *, Frame *);
 };
 
 #endif

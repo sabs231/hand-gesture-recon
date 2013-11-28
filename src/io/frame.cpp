@@ -2,7 +2,7 @@
 
 Frame::Frame()
 {
-	this->_filter = new std::vector<Filter *>();
+	this->_filter = new std::map<const std::string &, Filter *>();
 }
 
 Frame::~Frame()
@@ -11,12 +11,12 @@ Frame::~Frame()
 		delete (this->_filter);
 }
 
-void Frame::addFilter(Filter *f)
+void Frame::addFilter(const std::string & name, Filter *f)
 {
-	this->_filter->push_back(f);
+	this->_filter->insert(std::pair<const std::string &, Filter *>(name, f));
 }
 
-void Frame::removeFilter(Filter *)
+void Frame::removeFilter(const std::string & name)
 {
-	//what!?
+	this->_filter->erase(name);
 }
