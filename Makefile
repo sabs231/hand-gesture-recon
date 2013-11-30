@@ -19,7 +19,8 @@ SRC_MD			=		src/motiondetection/environmentOPCV.cpp			\
 
 SMDOBJ			=		$(SRC_MD:.cpp=.o)
 
-SRC_ML			=		src/machinelearning/NBayesClassifierOPCV.cpp
+SRC_ML			=		src/machinelearning/NBayesClassifierOPCV.cpp	\
+						src/machinelearning/classifier.cpp
 
 SMLOBJ			=		$(SRC_ML:.cpp=.o)
 
@@ -33,7 +34,7 @@ CXX				=		g++
 
 CXXFLAGS		+=		-I./include
 
-CXXFLAGS		+=		-W -Wall -Wextra -Werror
+CXXFLAGS		+=		-W -Wall -Wextra -Werror -g3
 
 OPENCVLIB		=		-lopencv_core -lopencv_highgui -lopencv_imgproc -lopencv_video -lopencv_features2d -lopencv_ml
 

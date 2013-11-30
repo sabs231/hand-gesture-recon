@@ -291,13 +291,13 @@ std::vector<double> computeVectors(IplImage** mhi, IplImage* dst, short wROI, sh
 		}
 	}
 
-	if(DEBUG){
+//	if(DEBUG){
 		for (std::vector<double>::iterator it = relevanceVector.begin() ; it != relevanceVector.end(); ++it)
 			std::cout << (*it) << ", ";
 		std::cout << std::endl;
-	}
+//	}
 	
-	return relevanceVector;
+return relevanceVector;
 }
 
 static int read_num_class_data( const char* filename, int var_count, CvMat** data, CvMat** responses ){

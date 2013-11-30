@@ -6,22 +6,26 @@
 #include 				"environmentOPCV.hh"
 #include 				"motionDetect.hh"
 #include 				"relevanceVectorOPCV.hh"
+#include 				"nBayesClassifierOPCV.hh"
+#include 				"classifier.hh"
 
 #include 				<opencv2/opencv.hpp>
 
 int 						main(int argc, char **argv)
 {
-	short							frameCount;
-	int 							width;
-	int 							height;
-	std::string				arg;
-	Input 						*input;
-	Frame 						*image;
-	Frame 						*motion;
-	MHIOPCV 					*myMHI;
-	Environment				*env;
-	MotionDetect 			*detection;
-	RelevanceVector 	*rv;
+	short								frameCount;
+	int 								width;
+	int 								height;
+	std::string					arg;
+	Input 							*input;
+	Frame 							*image;
+	Frame 							*motion;
+	MHIOPCV 						*myMHI;
+	Environment					*env;
+	MotionDetect 				*detection;
+	RelevanceVector 		*rv;
+	Classifier 					*classifier;
+	ClassifierBehavior 	*nBayes;
 
 	try
 	{
@@ -56,7 +60,11 @@ int 						main(int argc, char **argv)
 		env = new EnvironmentOPCV();
 		detection = new MotionDetect();
 		rv = new RelevanceVectorOPCV(0.5, 0.05);
+		nBayes = new NBayesClassifierOPCV("../trainData/trainData.txt");
+		classifier = new Classifier();
 		detection->setMHIBehavior(myMHI);
+		classifier->setClassifier("NBayes", nBayes);
+		classifier->performTrain("NBayes");
 		while (42) // answer of everything!
 		{
 			image = input->getFrame();
@@ -76,6 +84,12 @@ int 						main(int argc, char **argv)
 			rv->setWSROI((width - ((width / 5) * 2)) / 4);
 			rv->setHSROI((height - ((height / 5) * 2)) / 4);
 			rv->computeVectors(motion, env);
+			++frameCount;
+			if (frameCount > 14)
+			{
+				frameCount = 0;
+				classifier->performPredict("NBayes", rv);
+			}
 			motion->showImage("motion");
 			if (cvWaitKey(10) >= 0)
 				break;

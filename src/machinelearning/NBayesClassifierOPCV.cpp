@@ -4,9 +4,9 @@
 #include 				"nBayesClassifierOPCV.hh"
 #include 				"exception.hh"
 
-bool 						NBayesClassifierOPCV::readNumClassData(const char *fileName, int varCount)
+bool 						NBayesClassifierOPCV::readNumClassData(const std::string & fileName, int varCount)
 {
-	FILE 					*f = fopen(fileName, "rt");
+	FILE 					*f = fopen(fileName.c_str(), "rt");
 	const int 		M = 1024;
 	const float 	*sdata;
 	float 				*ddata;
@@ -21,7 +21,10 @@ bool 						NBayesClassifierOPCV::readNumClassData(const char *fileName, int varC
 	CvSeq 				*seq;
 
 	if (!f)
+	{
+		perror("Reason");
 		return (false);
+	}
 	el_ptr = new float[varCount + 1];
 	storage = cvCreateMemStorage();
 	seq = cvCreateSeq(0, sizeof(*seq), sizeof(float) * (varCount + 1), storage);
@@ -56,24 +59,21 @@ bool 						NBayesClassifierOPCV::readNumClassData(const char *fileName, int varC
 		CV_NEXT_SEQ_ELEM(seq->elem_size, reader);
 	}
 	cvReleaseMemStorage(&storage);
-	delete el_ptr;
+	delete (el_ptr);
 	return (true);
 }
 
-NBayesClassifierOPCV::NBayesClassifierOPCV(const char *fileName)
+NBayesClassifierOPCV::NBayesClassifierOPCV(const std::string & fileName)
 {
-	if (!this->readNumClassData(fileName, 51))
-		throw (new FileReadException("Could not read the training data from" + std::string(fileName)));
+	if (!this->readNumClassData(fileName, 33))
+		throw (new FileReadException("Could not read the training data from " + std::string(fileName)));
 	this->nBayesClass = new CvNormalBayesClassifier();
 }
 
 NBayesClassifierOPCV::~NBayesClassifierOPCV()
 {
-	cvReleaseMat(&this->trainResp);
-	cvReleaseMat(&this->data);
-	cvReleaseMat(&this->responses);
 	if (this->nBayesClass)
-		delete this->nBayesClass;
+		delete (this->nBayesClass);
 }
 
 void 		NBayesClassifierOPCV::printMat(CvMat *m)
@@ -102,33 +102,52 @@ void 		NBayesClassifierOPCV::printMat(CvMat *m)
 
 bool 		NBayesClassifierOPCV::train()
 {
-	int 	nSamplesAll = 0;
+	int 		nSamplesAll = 0;
+	CvMat 	tData;
 
 	nSamplesAll = this->data->rows;
 	std::cout << "Loading database..." << std::endl;
 	std::cout << "Trainning..." << std::endl;
-	cvGetRows(this->data, this->trainData, 0, nSamplesAll); 
+	cvGetRows(this->data, &tData, 0, nSamplesAll); 
 	this->trainResp = cvCreateMat(nSamplesAll, 1, CV_32FC1);
 	for (int i = 0; i < nSamplesAll; i++)
 		this->trainResp->data.fl[i] = this->responses->data.fl[i];
+	this->trainData = &tData;
 	this->nBayesClass->train(this->trainData, this->trainResp);
 	cvReleaseMat(&this->trainResp);
 	cvReleaseMat(&this->data);
 	cvReleaseMat(&this->responses);
+	std::cout << "The trainning has been completed" << std::endl;
 	return (true);
 }
 
 float 		NBayesClassifierOPCV::predict(RelevanceVector *rv)
 {
-	float 	prediction;
-	CvMat 	sample = cvMat(1, 51, CV_32FC1, rv->getRelevanceVector());
+	int 														i;
+	float 													prediction;
+	double 													relevance[33];
+	std::vector<double>::iterator 	it;
+	std::vector<double> 						*vec;
 
+	vec = reinterpret_cast<std::vector<double> *>(rv->getRelevanceVector());
+	i = 0;
+	for (it = vec->begin(); it != vec->end(); ++it)
+	{
+			relevance[i] = (*it);
+			i++;
+	}
+	CvMat 	sample = cvMat(1, 33, CV_32FC1, relevance);
 	prediction = 0.0000;
 	if (this->nBayesClass)
-	{
 		prediction = (float) this->nBayesClass->predict(&sample);
-		this->printMat(&sample);
-	}
 	std::cout << "Prediction: " << prediction << std::endl;
+	if (prediction == 81)
+		std::cout << "QUERER" << std::endl;
+	else if (prediction == 77)
+		std::cout << "MATRIMONIO" << std::endl;
+	else if (prediction == 72)
+		std::cout << "HOLA" << std::endl;
+	else
+		std::cout << "NADA" << std::endl;
 	return (prediction);
 }

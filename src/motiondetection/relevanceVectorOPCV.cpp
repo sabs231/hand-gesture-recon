@@ -4,6 +4,7 @@
 RelevanceVectorOPCV::RelevanceVectorOPCV()
 {
 	this->_relevanceV = new std::vector<double>();
+	this->_relevanceV->reserve(0);
 	this->_wROI = 0;
 	this->_hROI = 0;
 	this->_wSROI = 0;
@@ -15,6 +16,7 @@ RelevanceVectorOPCV::RelevanceVectorOPCV()
 RelevanceVectorOPCV::RelevanceVectorOPCV(double maxTime, double minTime)
 {
 	this->_relevanceV = new std::vector<double>();
+	this->_relevanceV->reserve(0);
 	this->_wROI = 0;
 	this->_hROI = 0;
 	this->_wSROI = 0;
@@ -91,6 +93,7 @@ void 	RelevanceVectorOPCV::computeVectors(Frame *dest, Environment *env)
 	IplImage 	*orient = 0;
 	IplImage 	*mask = 0;
 
+	this->_relevanceV->clear();
 	timeStamp = (double) clock() / CLOCKS_PER_SEC;
 	size = cvSize(reinterpret_cast<IplImage *>(dest->getImage())->width,
 			reinterpret_cast<IplImage *>(dest->getImage())->height);

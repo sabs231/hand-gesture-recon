@@ -8,13 +8,13 @@
 class 			Classifier
 {
 	protected:
-		std::map<const std::string &, ClassifierBehavior *> 	*_classifiers;
+		std::map<std::string, ClassifierBehavior *> 	*_classifiers;
 	public:
 		Classifier();
 		~Classifier();
-		void 	setClassifier(const std::string &, ClassifierBehavior *);
+		void 	setClassifier(std::string, ClassifierBehavior *);
 		void 	performTrain(const std::string &);
-		void 	performPredict(const std::string &);
+		void 	performPredict(const std::string &, RelevanceVector *);
 };
 
 #endif
