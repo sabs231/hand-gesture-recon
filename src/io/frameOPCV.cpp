@@ -33,6 +33,11 @@ void 	*FrameOPCV::getImage()
 	return (reinterpret_cast<void *>(this->_image));
 }
 
+void 	FrameOPCV::setImage(void *img)
+{
+	this->_image = reinterpret_cast<IplImage *>(img);
+}
+		
 void 	FrameOPCV::showImage(const std::string & wName)
 {
 	cvShowImage(wName.c_str(), this->_image);

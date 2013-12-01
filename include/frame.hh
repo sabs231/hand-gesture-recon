@@ -6,6 +6,8 @@
 # include 	"filter.hh"
 # include 	"frameImage.hh"
 
+class 			Filter;
+
 class 			Frame
 {
 	protected:
@@ -16,6 +18,7 @@ class 			Frame
 		void 								addFilter(std::string, Filter *);
 		void 								removeFilter(std::string);
 		virtual void 				*getImage() = 0;
+		virtual void 				setImage(void *) = 0;
 		virtual void 				showImage(const std::string &) = 0;
 };
 

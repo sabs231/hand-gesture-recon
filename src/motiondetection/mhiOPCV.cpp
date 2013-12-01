@@ -1,5 +1,8 @@
 #include 	<cstdlib>
 #include 	"mhiOPCV.hh"
+#include 	"frameOPCV.hh"
+#include 	"filter.hh"
+#include 	"filterGrayScaleOPCV.hh"
 
 MHIOPCV::MHIOPCV()
 {
@@ -59,14 +62,19 @@ void 	MHIOPCV::update(Frame *src, Frame *dest, Environment *env)
 	double 		timeStamp;
 	IplImage 	*mhi;
 	IplImage 	*mask;
-	IplImage 	*silh;
+	Frame 		*other;
+	Filter 		*filter;
+	FilterBehavior 	*grayScale;
 	CvSize 		size = cvSize(reinterpret_cast<IplImage *>(src->getImage())->width, 
 			reinterpret_cast<IplImage *>(src->getImage())->height);
 
+	other = new FrameOPCV();
+	filter = new Filter();
+	grayScale = new FilterGrayScaleOPCV();
+	filter->setFilter(grayScale);
 	timeStamp = (double)clock() / CLOCKS_PER_SEC;
 	last = env->getLast();
 	idx1 = last;
-	silh = reinterpret_cast<IplImage *>(env->getSilh());
 	mhi = reinterpret_cast<IplImage *>(env->getMHI());
 	mask = reinterpret_cast<IplImage *>(env->getMask());
 	if (!mhi || mhi->width != size.width || mhi->height != size.height)
@@ -90,7 +98,9 @@ void 	MHIOPCV::update(Frame *src, Frame *dest, Environment *env)
 		mask = cvCreateImage(size, IPL_DEPTH_8U, 1);
 		env->setMask(reinterpret_cast<void *>(mask));
 	}
-	cvCvtColor(reinterpret_cast<IplImage *>(src->getImage()), this->_buf[last], CV_BGR2GRAY);
+	other->setImage(reinterpret_cast<void *>(this->_buf[last]));
+	filter->performFilter(src, other);
+	this->_buf[last] = reinterpret_cast<IplImage *>(other->getImage());
 	idx2 = (last + 1) % this->_cyclicFrame;
 	last = idx2;
 	env->setLast(last);

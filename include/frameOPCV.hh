@@ -15,6 +15,7 @@ class 			FrameOPCV : public Frame, public FrameImage
 		~FrameOPCV();
 		IplImage 			*getIplImage();
 		void 					setIplImage(IplImage *);
+		virtual void 	setImage(void *);
 		virtual void 	*getImage();
 		virtual void 	showImage(const std::string &);
 		virtual int 	getWidth() const;
