@@ -35,7 +35,7 @@ CXX				=		g++
 
 CXXFLAGS		+=		-I./include
 
-CXXFLAGS		+=		-W -Wall -Wextra -Werror
+CXXFLAGS		+=		-W -Wall -Wextra -Werror -g3
 
 OPENCVLIB		=		-lopencv_core -lopencv_highgui -lopencv_imgproc -lopencv_video -lopencv_features2d -lopencv_ml
 
