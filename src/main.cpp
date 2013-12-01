@@ -84,7 +84,6 @@ int 						main(int argc, char **argv)
 			rv->setWSROI((width - ((width / 5) * 2)) / 4);
 			rv->setHSROI((height - ((height / 5) * 2)) / 4);
 			rv->computeVectors(motion, env);
-			delete (image);
 			++frameCount;
 			if (frameCount > 14)
 			{
@@ -96,7 +95,6 @@ int 						main(int argc, char **argv)
 				break;
 		}
 		cvDestroyWindow("motion");
-		delete (input);
 	}
 	catch (std::exception *e)
 	{
