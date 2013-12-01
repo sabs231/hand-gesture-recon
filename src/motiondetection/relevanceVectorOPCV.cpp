@@ -242,4 +242,6 @@ void 	RelevanceVectorOPCV::computeVectors(Frame *dest, Environment *env)
 			cvResetImageROI(mask);
 		}
 	}
+	cvReleaseImage(orient);
+	cvReleaseImage(mask);
 }
