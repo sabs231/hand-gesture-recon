@@ -29,7 +29,7 @@ SRC				=		src/main.cpp
 
 SOBJ			=		$(SRC:.cpp=.o)
 
-NAME			=		bin/grecon
+NAME			=		grecon
 
 CXX				=		g++
 
