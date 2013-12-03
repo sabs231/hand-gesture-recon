@@ -60,7 +60,7 @@ int 						main(int argc, char **argv)
 		env = new EnvironmentOPCV();
 		detection = new MotionDetect();
 		rv = new RelevanceVectorOPCV(0.5, 0.05);
-		nBayes = new NBayesClassifierOPCV("../trainData/trainData.txt");
+		nBayes = new NBayesClassifierOPCV("./trainData/trainData.txt");
 		classifier = new Classifier();
 		detection->setMHIBehavior(myMHI);
 		classifier->setClassifier("NBayes", nBayes);
@@ -90,11 +90,13 @@ int 						main(int argc, char **argv)
 				frameCount = 0;
 				classifier->performPredict("NBayes", rv);
 			}
+			image->showImage("original");
 			motion->showImage("motion");
 			if (cvWaitKey(10) >= 0)
 				break;
 		}
 		cvDestroyWindow("motion");
+		cvDestroyWindow("original");
 	}
 	catch (std::exception *e)
 	{
